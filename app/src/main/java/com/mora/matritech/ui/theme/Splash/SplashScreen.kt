@@ -58,7 +58,7 @@ fun SplashScreenContent() {
             modifier = Modifier.fillMaxSize()
         ) {
             Text(
-                text = "Mi App",
+                text = "Bienvenido a MatriTech",
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.headlineMedium
             )
