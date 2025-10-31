@@ -28,13 +28,14 @@ fun LogoImage(){
         modifier = Modifier
             .size(200.dp)
             .clip(CircleShape)
+
     )
 }
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {}
 ) {
-    var username by remember { mutableStateOf("") }
+    var useremail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Box(
@@ -44,10 +45,12 @@ fun LoginScreen(
         contentAlignment = Alignment.Center
 
     ) {
+        
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             LogoImage()
 
             Text(
@@ -56,8 +59,8 @@ fun LoginScreen(
             )
 
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
+                value = useremail,
+                onValueChange = { useremail = it },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -72,7 +75,7 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    if (username.isNotBlank() && password.isNotBlank()) {
+                    if (useremail.isNotBlank() && password.isNotBlank()) {
                         onLoginSuccess()
                     }
                 },
@@ -87,6 +90,28 @@ fun LoginScreen(
                     .fillMaxWidth()
             ) {
                 Text("Ingresar")
+            }
+            Button(
+                onClick = {
+                    if (useremail.isBlank() && password.isBlank()){
+                        onLoginSuccess()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00FF00),
+                    contentColor = Color.Black
+                ),
+                shape = (RoundedCornerShape(5.dp)),
+                modifier = Modifier
+                    .padding(10.dp)
+                    .height(50.dp)
+                    .fillMaxWidth()
+
+
+            ) {
+                Text(
+                    ("Google")
+                )
             }
 
         }
