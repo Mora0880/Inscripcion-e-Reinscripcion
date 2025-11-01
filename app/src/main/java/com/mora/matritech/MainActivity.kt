@@ -16,6 +16,7 @@ import com.mora.matritech.ui.theme.MatriTechTheme
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.Composable
 import com.mora.matritech.ui.Splash.SplashScreen
+import com.mora.matritech.ui.theme.Register.RegisterScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,9 +48,24 @@ fun AppNavigation() {
             )
         }
 
+        composable(NavRoutes.register.route) {
+            RegisterScreen(
+                onRegisterClick = { email, password, name ->
+                    // Aquí luego llamarás Supabase para crear el usuario
+                },
+                onLoginClick = {
+                    navController.navigate("login") {
+                        popUpTo(NavRoutes.register.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+
         // Login Screen
         composable(NavRoutes.Login.route) {
             LoginScreen(
+                navController = navController,
                 onLoginSuccess = {
                     navController.navigate(NavRoutes.Home.route) {
                         popUpTo(NavRoutes.Login.route) { inclusive = true }

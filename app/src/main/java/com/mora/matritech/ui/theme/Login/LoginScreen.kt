@@ -15,25 +15,29 @@ import androidx.compose.ui.unit.dp
 import com.mora.matritech.ui.theme.MatriTechTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import com.mora.matritech.R
 import androidx.compose.ui.draw.clip
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.mora.matritech.ui.NavRoutes
+
 @Composable
-fun LogoImage(){
+fun LogoImage() {
     Image(
         painter = painterResource(id = R.drawable.ic_launcher_background),
         contentDescription = "MatriTech",
         contentScale = ContentScale.Crop,
         modifier = Modifier
-            .size(200.dp)
+            .size(120.dp)
             .clip(CircleShape)
-
     )
 }
+
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+            navController: NavHostController
 ) {
     var useremail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -43,12 +47,11 @@ fun LoginScreen(
             .fillMaxSize()
             .padding(24.dp),
         contentAlignment = Alignment.Center
-
     ) {
-        
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
             LogoImage()
@@ -73,55 +76,61 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Botón de login
             Button(
                 onClick = {
                     if (useremail.isNotBlank() && password.isNotBlank()) {
                         onLoginSuccess()
+                    } else {
+                        // aquí podrías mostrar un Snackbar o validación
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF00C3FF),
                     contentColor = Color.Black
                 ),
-                shape = (RoundedCornerShape(5.dp)),
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
-                    .padding(10.dp)
-                    .height(50.dp)
                     .fillMaxWidth()
+                    .height(50.dp)
             ) {
                 Text("Ingresar")
             }
-            Button(
+
+            // Botón para login con Google (solo UI por ahora)
+            OutlinedButton(
                 onClick = {
-                    if (useremail.isBlank() && password.isBlank()){
-                        onLoginSuccess()
-                    }
+                    // implementar OAuth/Google sign-in cuando estés listo
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00FF00),
-                    contentColor = Color.Black
-                ),
-                shape = (RoundedCornerShape(5.dp)),
                 modifier = Modifier
-                    .padding(10.dp)
-                    .height(50.dp)
                     .fillMaxWidth()
-
-
+                    .height(50.dp),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text(
-                    ("Google")
-                )
+                Text("Continuar con Google")
             }
 
+            // Link a registro
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(text = "¿No tienes cuenta? ")
+                TextButton(onClick = {
+                    navController.navigate(NavRoutes.register.route)
+                }) {
+                    Text("Regístrate")
+                }
+            }
         }
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun LoginScreenView(){
+fun LoginScreenPreview() {
+    val navController = rememberNavController()
     MatriTechTheme {
-        LoginScreen()
+        LoginScreen(navController = navController)
     }
 }
