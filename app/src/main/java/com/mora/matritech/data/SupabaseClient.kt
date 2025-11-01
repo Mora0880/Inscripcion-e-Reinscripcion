@@ -11,8 +11,8 @@ import org.json.JSONObject
 
 object SupabaseClient {
 
-    val baseUrl = "https://yakpqvzggrtkltjopvoh.supabase.co"
-    val anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlha3BxdnpnZ3J0a2x0am9wdm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTM5MzQsImV4cCI6MjA3NTE4OTkzNH0.fzt9YWkI127zJ5Kj0K3_l9BC9y6hbzkeRUxfBEVJSZw"
+    var baseUrl = "https://yakpqvzggrtkltjopvoh.supabase.co"
+    var anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlha3BxdnpnZ3J0a2x0am9wdm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTM5MzQsImV4cCI6MjA3NTE4OTkzNH0.fzt9YWkI127zJ5Kj0K3_l9BC9y6hbzkeRUxfBEVJSZw"
 
 
     private val client = OkHttpClient()
