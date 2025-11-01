@@ -1,6 +1,6 @@
+// kotlin
 package com.mora.matritech
 
-import LoginScreen
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.mora.matritech.data.SupabaseClient
 import com.mora.matritech.ui.login.LoginScreen
+import com.mora.matritech.ui.theme.MatriTechTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,10 +23,13 @@ class MainActivity : ComponentActivity() {
         SupabaseClient.anonKey = getString(R.string.supabase_anon_key)
 
         setContent {
-            LoginScreen(
-                onLoginWithEmail = { email, pass -> signInEmail(email, pass) },
-                onGoogleSignIn = { startGoogleSignIn() }
-            )
+            MatriTechTheme {
+                // Uso de argumentos posicionales para evitar errores de nombres de parámetro
+                LoginScreen(
+                    { email, pass -> signInEmail(email, pass) },
+                    { startGoogleSignIn() }
+                )
+            }
         }
 
         handleIntentIfCallback(intent)
@@ -47,7 +51,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIntentIfCallback(intent)
     }
