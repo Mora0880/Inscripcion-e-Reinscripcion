@@ -10,8 +10,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 object SupabaseClient {
-    lateinit var baseUrl: String
-    lateinit var anonKey: String
+
+    val baseUrl = "https://yakpqvzggrtkltjopvoh.supabase.co"
+    val anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlha3BxdnpnZ3J0a2x0am9wdm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTM5MzQsImV4cCI6MjA3NTE4OTkzNH0.fzt9YWkI127zJ5Kj0K3_l9BC9y6hbzkeRUxfBEVJSZw"
+
 
     private val client = OkHttpClient()
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
