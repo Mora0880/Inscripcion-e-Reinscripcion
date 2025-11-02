@@ -1,0 +1,101 @@
+[33mcommit 8390aab3e2dd8bbb8f850656c4a6a4d8848989b8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mconexion[m[33m, [m[1;31morigin/conexion[m[33m)[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Sat Nov 1 19:21:01 2025 -0400
+
+    Mas errores solucionados
+
+[33mcommit 4c59711f9f83c27c41cb8b3cfc49036d7835322a[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Sat Nov 1 19:03:53 2025 -0400
+
+    Otro error reparado
+
+[33mcommit 559ef52e125480f4b5ba7afe199cb08c85922b27[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Sat Nov 1 18:32:17 2025 -0400
+
+    Error areglado
+
+[33mcommit a0c038d71ace8383216943b4067194134a98e871[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Sat Nov 1 18:11:43 2025 -0400
+
+    Conexion a la Base de Datos
+
+[33mcommit a54b419ec1b90725773feace896f9caa1c6b268a[m[33m ([m[1;32mmaster[m[33m)[m
+Merge: 089d565 a6a2a57
+Author: Daury <Daurycontreradelacruz01@gmail.com>
+Date:   Fri Oct 31 11:15:40 2025 -0400
+
+    Merge pull request #4 from Mora0880/mejorar-login
+    
+    Mejoras al login
+
+[33mcommit a6a2a5777909211478abe91310927b06210b7322[m[33m ([m[1;31morigin/mejorar-login[m[33m, [m[1;32mmejorar-login[m[33m)[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Fri Oct 31 11:08:05 2025 -0400
+
+    Mejoras al login
+
+[33mcommit 089d565125ce37e4fbc798eace119eefd7481e28[m
+Merge: 6e27cb9 b1e1806
+Author: Daury <Daurycontreradelacruz01@gmail.com>
+Date:   Thu Oct 30 10:00:02 2025 -0400
+
+    Merge pull request #3 from Mora0880/estilo-login
+    
+    Estilos del login mejorados
+
+[33mcommit b1e180639abf5659f0db3fcef30b12a83840f430[m[33m ([m[1;31morigin/estilo-login[m[33m, [m[1;32mestilo-login[m[33m)[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Thu Oct 30 09:57:08 2025 -0400
+
+    Estilos del login mejorados
+
+[33mcommit 6e27cb952813662b48db497247831794ced2eef9[m
+Author: Daury <daurycontreradelacruz01@gmail.com>
+Date:   Mon Oct 27 12:41:13 2025 -0400
+
+    cambio en el texto del splash
+
+[33mcommit db45ddace7c81a3b6604f3a72f3ce4d9a84e2b0e[m
+Merge: 46060f8 f83564c
+Author: Mora0880 <maximoalgenysmoracandelario@gmail.com>
+Date:   Wed Oct 22 00:10:48 2025 -0400
+
+    Merge pull request #2 from Mora0880/login
+    
+    creacion del login,añadi una mejor nav, trancision entre el login y e…
+
+[33mcommit f83564c9a967ebc73c58dce996c1604209193e9b[m[33m ([m[1;31morigin/login[m[33m)[m
+Author: Maximo Mora <maximoalgenysmoracandelario@gmail.com>
+Date:   Wed Oct 22 00:09:07 2025 -0400
+
+    creacion del login,anadi una mejor nav, trancision entre el login y el splash.
+
+[33mcommit 46060f889f9bf7eb57604e93596b0ab05a980658[m
+Merge: f24189f 9ba185e
+Author: Mora0880 <maximoalgenysmoracandelario@gmail.com>
+Date:   Tue Oct 21 22:42:44 2025 -0400
+
+    Merge pull request #1 from Mora0880/Splahs
+    
+    SplashScreen creada, sencillo
+
+[33mcommit 9ba185ed9ff067bacd852623b3157a34a6f4ae9b[m[33m ([m[1;31morigin/Splahs[m[33m)[m
+Author: Maximo Mora <maximoalgenysmoracandelario@gmail.com>
+Date:   Tue Oct 21 22:40:07 2025 -0400
+
+    SplashScreen creada, sencillo
+
+[33mcommit f24189fb32ec0ee28788cc20a2593495e50f0194[m
+Author: Maximo Mora <maximoalgenysmoracandelario@gmail.com>
+Date:   Tue Oct 21 21:07:38 2025 -0400
+
+    haciendo la conexion del repositorio a la app
+
+[33mcommit ce71da495836555253b5ff3416d6861de4f8e212[m
+Author: Maximo Mora <maximoalgenysmoracandelario@gmail.com>
+Date:   Tue Oct 21 15:16:10 2025 -0400
+
+    haciendo la conexion del repositorio a la app
