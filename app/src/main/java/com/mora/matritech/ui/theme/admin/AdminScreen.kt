@@ -31,7 +31,7 @@ fun AdminScreen() {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_menu),
                             contentDescription = "Menú",
-                            tint = Color.Unspecified // <--- para que el vector mantenga su color
+                            tint = Color.Gray// <--- para que el vector mantenga su color
                         )
                     }
                 },
@@ -58,7 +58,7 @@ fun AdminScreen() {
         },
         bottomBar = {
             BottomAppBar(
-                containerColor = Color(0xFF00C3FF)
+                containerColor = Color(0xFFB0B0B0)
             ) {
                 Row(
                     modifier = Modifier
