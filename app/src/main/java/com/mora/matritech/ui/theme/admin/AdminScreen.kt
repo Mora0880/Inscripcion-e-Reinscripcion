@@ -3,7 +3,10 @@ package com.mora.matritech.ui.theme.admin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,7 +34,7 @@ fun AdminScreen() {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_menu),
                             contentDescription = "Menú",
-                            tint = Color.Gray// <--- para que el vector mantenga su color
+                            tint = Color.Gray
                         )
                     }
                 },
@@ -58,36 +61,49 @@ fun AdminScreen() {
         },
         bottomBar = {
             BottomAppBar(
-                containerColor = Color(0xFFB0B0B0)
+                containerColor = Color.White,
+                modifier = Modifier.height(56.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = 32.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { selectedItem = "home" }) {
+                    IconButton(
+                        onClick = { selectedItem = "home" },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_home),
                             contentDescription = "Inicio",
-                            tint = if (selectedItem == "home") Color.Unspecified else Color.White
+                            tint = if (selectedItem == "home") Color(0xFF2196F3) else Color.Gray,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    IconButton(onClick = { selectedItem = "add" }) {
+                    IconButton(
+                        onClick = { selectedItem = "add" },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_add),
                             contentDescription = "Agregar",
-                            tint = if (selectedItem == "add") Color.Unspecified else Color.White
+                            tint = if (selectedItem == "add") Color(0xFF2196F3) else Color.Black,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    IconButton(onClick = { selectedItem = "chat" }) {
+                    IconButton(
+                        onClick = { selectedItem = "chat" },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_chat),
                             contentDescription = "Mensajes",
-                            tint = if (selectedItem == "chat") Color.Unspecified else Color.White
+                            tint = if (selectedItem == "chat") Color(0xFF2196F3) else Color.Black,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -98,52 +114,257 @@ fun AdminScreen() {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color.White),
+                .background(Color(0xFFF5F5F5))
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Tarjetas del panel principal
-            Row(
+            // Header dentro del contenido
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .background(Color.White)
+                    .padding(vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AdminCard(title = "Inscritos", iconId = R.drawable.ic_user)
-                AdminCard(title = "Pendientes", iconId = R.drawable.ic_pending)
-                AdminCard(title = "Grados", iconId = R.drawable.ic_section)
+                Text(
+                    "MatriTech",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Panel de Administración",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF6B7EFF)
+                ) {
+                    Text(
+                        "ADMINISTRADOR",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sección de Estadísticas
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                // Primera fila de estadísticas
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        title = "TOTAL USUARIOS",
+                        value = "48",
+                        iconId = R.drawable.ic_user,
+                        iconColor = Color(0xFF6B7EFF),
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        title = "ESTUDIANTES",
+                        value = "32",
+                        iconId = R.drawable.ic_pending,
+                        iconColor = Color(0xFF4CAF50),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Segunda fila de estadísticas
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        title = "DOCENTES",
+                        value = "12",
+                        iconId = R.drawable.ic_user,
+                        iconColor = Color(0xFFFF9800),
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        title = "ADMINISTRADORES",
+                        value = "4",
+                        iconId = R.drawable.ic_user,
+                        iconColor = Color(0xFFF44336),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Sección de Acciones Rápidas
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "Acciones Rápidas",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuickActionCard(
+                        title = "Agregar Usuario",
+                        iconId = R.drawable.ic_add,
+                        backgroundColor = Color(0xFF2196F3),
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickActionCard(
+                        title = "Exportar Datos",
+                        iconId = R.drawable.ic_section,
+                        backgroundColor = Color.White,
+                        textColor = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuickActionCard(
+                        title = "Ver Reportes",
+                        iconId = R.drawable.ic_pending,
+                        backgroundColor = Color.White,
+                        textColor = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickActionCard(
+                        title = "Configuración",
+                        iconId = R.drawable.ic_section,
+                        backgroundColor = Color.White,
+                        textColor = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-fun AdminCard(title: String, iconId: Int) {
+fun StatCard(
+    title: String,
+    value: String,
+    iconId: Int,
+    iconColor: Color,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
-            .width(110.dp)
-            .height(120.dp)
-            .clickable { /* acción según sección */ },
+        modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF7FF))
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = iconColor.copy(alpha = 0.1f),
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = iconId),
+                    contentDescription = title,
+                    tint = iconColor,
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = title,
+                fontSize = 10.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            // Barra de color indicadora
+            Box(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(4.dp)
+                    .background(
+                        color = iconColor,
+                        shape = RoundedCornerShape(2.dp)
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionCard(
+    title: String,
+    iconId: Int,
+    backgroundColor: Color,
+    textColor: Color = Color.White,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .height(100.dp)
+            .clickable { /* acción */ },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 painter = painterResource(id = iconId),
                 contentDescription = title,
-                tint = Color.Unspecified, // <--- mantiene color del vector
-                modifier = Modifier.size(40.dp)
+                tint = if (backgroundColor == Color.White) Color(0xFF2196F3) else Color.White,
+                modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor
             )
         }
     }
@@ -156,4 +377,3 @@ fun PreviewAdminScreen() {
         AdminScreen()
     }
 }
-
