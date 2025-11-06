@@ -11,9 +11,11 @@ import org.json.JSONObject
 
 object SupabaseClient {
 
+    // CAMBIAR: pon aquí la URL de tu proyecto Supabase (o carga desde BuildConfig)
     var baseUrl = "https://yakpqvzggrtkltjopvoh.supabase.co"
-    var anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlha3BxdnpnZ3J0a2x0am9wdm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTM5MzQsImV4cCI6MjA3NTE4OTkzNH0.fzt9YWkI127zJ5Kj0K3_l9BC9y6hbzkeRUxfBEVJSZw"
 
+    // CAMBIAR: cambia esta anonKey por la tuya. No guardar claves en código en producción.
+    var anonKey = "REEMPLAZA_POR_TU_ANON_KEY"
 
     private val client = OkHttpClient()
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
@@ -25,19 +27,22 @@ object SupabaseClient {
                 .put("email", email)
                 .put("password", password)
                 .toString()
-                .toRequestBody(jsonMedia)
+            val body = bodyJson.toRequestBody(jsonMedia)
 
             val req = Request.Builder()
                 .url(url)
-                .post(bodyJson)
+                .post(body)
                 .addHeader("apikey", anonKey)
                 .addHeader("Authorization", "Bearer $anonKey")
                 .build()
 
-            client.newCall(req).execute().use { resp ->
+            val result: Result<String> = client.newCall(req).execute().use { resp ->
                 val text = resp.body?.string().orEmpty()
-                if (resp.isSuccessful) Result.success(text) else Result.failure(Exception("Error ${resp.code}: $text"))
+                if (resp.isSuccessful) Result.success(text)
+                else Result.failure(Exception("Error ${resp.code}: $text"))
             }
+
+            result
         } catch (e: Exception) {
             Result.failure(e)
         }
