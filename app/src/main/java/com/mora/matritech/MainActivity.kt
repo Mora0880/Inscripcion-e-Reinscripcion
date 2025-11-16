@@ -15,6 +15,7 @@ import com.mora.matritech.ui.login.LoginScreen
 import com.mora.matritech.ui.theme.MatriTechTheme
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.Composable
+import com.mora.matritech.data.supabase
 import com.mora.matritech.ui.Splash.SplashScreen
 import com.mora.matritech.ui.theme.Register.RegisterScreen
 
@@ -24,6 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MatriTechTheme {
                 AppNavigation()
+                val client = supabase
             }
         }
     }
