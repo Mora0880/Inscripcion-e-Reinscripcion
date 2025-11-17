@@ -3,9 +3,6 @@ package com.mora.matritech
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,11 +10,10 @@ import com.mora.matritech.ui.NavRoutes
 import com.mora.matritech.ui.home.HomeScreen
 import com.mora.matritech.ui.login.LoginScreen
 import com.mora.matritech.ui.theme.MatriTechTheme
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.Composable
-import com.mora.matritech.data.supabase
+import com.mora.matritech.data.remote.supabase
 import com.mora.matritech.ui.Splash.SplashScreen
-import com.mora.matritech.ui.theme.Register.RegisterScreen
+import com.mora.matritech.ui.theme.register.RegisterScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,28 +47,14 @@ fun AppNavigation() {
         }
 
         composable(NavRoutes.register.route) {
-            RegisterScreen(
-                onRegisterClick = { email, password, name ->
-                    // Aquí luego llamarás Supabase para crear el usuario
-                },
-                onLoginClick = {
-                    navController.navigate("login") {
-                        popUpTo(NavRoutes.register.route) { inclusive = true }
-                    }
-                }
-            )
+            RegisterScreen(navController = navController)
         }
 
 
         // Login Screen
         composable(NavRoutes.Login.route) {
             LoginScreen(
-                navController = navController,
-                onLoginSuccess = {
-                    navController.navigate(NavRoutes.Home.route) {
-                        popUpTo(NavRoutes.Login.route) { inclusive = true }
-                    }
-                }
+                navController = navController
             )
         }
 

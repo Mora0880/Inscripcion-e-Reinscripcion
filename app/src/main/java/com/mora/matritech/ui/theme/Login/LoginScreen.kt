@@ -1,7 +1,6 @@
 package com.mora.matritech.ui.login
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,17 +9,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.mora.matritech.ui.theme.MatriTechTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.mora.matritech.R
 import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.mora.matritech.ui.NavRoutes
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun LogoImage() {
@@ -36,101 +33,114 @@ fun LogoImage() {
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {},
-            navController: NavHostController
+    navController: NavHostController,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var useremail by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            LogoImage()
-
-            Text(
-                text = "Iniciar Sesión",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            OutlinedTextField(
-                value = useremail,
-                onValueChange = { useremail = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Contraseña") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Botón de login
-            Button(
-                onClick = {
-                    if (useremail.isNotBlank() && password.isNotBlank()) {
-                        onLoginSuccess()
-                    } else {
-                        // aquí podrías mostrar un Snackbar o validación
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00C3FF),
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Ingresar")
-            }
-
-            // Botón para login con Google (solo UI por ahora)
-            OutlinedButton(
-                onClick = {
-                    // implementar OAuth/Google sign-in cuando estés listo
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("Continuar con Google")
-            }
-
-            // Link a registro
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(text = "¿No tienes cuenta? ")
-                TextButton(onClick = {
-                    navController.navigate(NavRoutes.register.route)
-                }) {
-                    Text("Regístrate")
-                }
+    // Navegar cuando login sea exitoso
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            navController.navigate(NavRoutes.Home.route) {
+                popUpTo(NavRoutes.Login.route) { inclusive = true }
             }
         }
     }
-}
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun LoginScreenPreview() {
-    val navController = rememberNavController()
-    MatriTechTheme {
-        LoginScreen(navController = navController)
+    // Mostrar errores
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            snackbarHostState.showSnackbar(
+                message = it,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearError()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                LogoImage()
+
+                Text(
+                    text = "Iniciar Sesión",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Botón de login
+                Button(
+                    onClick = {
+                        viewModel.login(email, password)
+                    },
+                    enabled = !uiState.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00C3FF),
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.Black
+                        )
+                    } else {
+                        Text("Ingresar")
+                    }
+                }
+
+                // Link a registro
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(text = "¿No tienes cuenta? ")
+                    TextButton(
+                        onClick = {
+                            navController.navigate(NavRoutes.register.route)
+                        },
+                        enabled = !uiState.isLoading
+                    ) {
+                        Text("Regístrate")
+                    }
+                }
+            }
+        }
     }
 }

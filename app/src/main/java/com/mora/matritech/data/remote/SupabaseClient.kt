@@ -1,4 +1,4 @@
-package com.mora.matritech.data
+package com.mora.matritech.data.remote
 
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
