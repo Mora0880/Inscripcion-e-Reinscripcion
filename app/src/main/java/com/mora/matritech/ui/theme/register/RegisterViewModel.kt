@@ -1,4 +1,4 @@
-package com.mora.matritech.ui.theme.Register
+package com.mora.matritech.ui.theme.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

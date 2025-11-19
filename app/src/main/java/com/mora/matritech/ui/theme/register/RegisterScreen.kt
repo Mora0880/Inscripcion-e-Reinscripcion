@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.mora.matritech.ui.NavRoutes
-import com.mora.matritech.ui.theme.Register.RegisterViewModel
+import com.mora.matritech.ui.theme.register.RegisterViewModel
 import com.mora.matritech.model.UserRole  // ← IMPORT IMPORTANTE
 import androidx.navigation.compose.rememberNavController
 
