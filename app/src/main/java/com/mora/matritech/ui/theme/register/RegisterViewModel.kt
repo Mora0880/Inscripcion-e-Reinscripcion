@@ -1,4 +1,4 @@
-package com.mora.matritech.ui.theme.Register
+package com.mora.matritech.ui.theme.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,11 +22,26 @@ class RegisterViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun register(email: String, password: String, confirmPassword: String, nombre: String) {
+    /**
+     * Registrar usuario con rol específico
+     * @param email Correo electrónico
+     * @param password Contraseña
+     * @param confirmPassword Confirmación de contraseña
+     * @param nombre Nombre completo
+     * @param roleId ID del rol seleccionado (1-5) ← NUEVO PARÁMETRO
+     */
+    fun register(
+        email: String,
+        password: String,
+        confirmPassword: String,
+        nombre: String,
+        roleId: Int  // ← AGREGADO
+    ) {
         viewModelScope.launch {
             println("🔵 INICIO REGISTRO")
             println("📧 Email: $email")
             println("👤 Nombre: $nombre")
+            println("🎭 Role ID: $roleId")  // ← AGREGADO
 
             // Validaciones
             if (email.isBlank() || password.isBlank() || nombre.isBlank()) {
@@ -61,14 +76,23 @@ class RegisterViewModel : ViewModel() {
                 return@launch
             }
 
+            // ← NUEVA VALIDACIÓN
+            if (roleId !in 1..5) {
+                println("❌ Rol inválido")
+                _uiState.value = RegisterUiState(
+                    errorMessage = "Debes seleccionar un rol válido"
+                )
+                return@launch
+            }
+
             println("✅ Validaciones pasadas, iniciando registro...")
 
             // Mostrar loading
             _uiState.value = RegisterUiState(isLoading = true)
 
-            // Intentar registro
-            println("🔄 Llamando a authRepository.signUp...")
-            when (val result = authRepository.signUp(email, password, nombre)) {
+            // Intentar registro CON ROLEID ← CAMBIADO
+            println("🔄 Llamando a authRepository.signUp con rol...")
+            when (val result = authRepository.signUp(email, password, nombre, roleId)) {  // ← AGREGADO roleId
                 is AuthResult.Success -> {
                     println("✅ Registro exitoso!")
                     _uiState.value = RegisterUiState(isSuccess = true)

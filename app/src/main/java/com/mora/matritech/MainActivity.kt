@@ -3,17 +3,22 @@ package com.mora.matritech
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.mora.matritech.ui.NavRoutes
-import com.mora.matritech.ui.home.HomeScreen
 import com.mora.matritech.ui.login.LoginScreen
 import com.mora.matritech.ui.theme.MatriTechTheme
-import androidx.compose.runtime.Composable
 import com.mora.matritech.data.remote.supabase
 import com.mora.matritech.ui.Splash.SplashScreen
 import com.mora.matritech.ui.theme.register.RegisterScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.*
+import com.mora.matritech.model.UserRole
+import com.mora.matritech.screens.admin.AdminScreen
+import com.mora.matritech.screens.coordinator.CoordinatorScreen
+import com.mora.matritech.screens.representante.RepresentanteScreen
+import com.mora.matritech.screens.student.StudentScreen
+import com.mora.matritech.screens.teaching.TeacherScreen
+import com.mora.matritech.ui.login.LoginViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,7 +26,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             MatriTechTheme {
                 AppNavigation()
-                val client = supabase
             }
         }
     }
@@ -30,38 +34,30 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val loginViewModel: LoginViewModel = viewModel()
+
+    val loginState by loginViewModel.uiState.collectAsState()
 
     NavHost(
         navController = navController,
         startDestination = NavRoutes.Splash.route
     ) {
-        // Splash Screen
         composable(NavRoutes.Splash.route) {
-            SplashScreen(
-                onSplashFinished = {
-                    navController.navigate(NavRoutes.Login.route) {
-                        popUpTo(NavRoutes.Splash.route) { inclusive = true }
-                    }
-                }
-            )
+            SplashScreen(navController)
         }
 
         composable(NavRoutes.register.route) {
-            RegisterScreen(navController = navController)
+            RegisterScreen(navController)
         }
 
-
-        // Login Screen
         composable(NavRoutes.Login.route) {
-            LoginScreen(
-                navController = navController
-            )
+            LoginScreen(navController, loginViewModel)
         }
 
-        // Home Screen
-        composable(NavRoutes.Home.route) {
-            HomeScreen()
-        }
+        composable(NavRoutes.Admin.route) { AdminScreen() }
+        composable(NavRoutes.Coordinator.route) { CoordinatorScreen() }
+        composable(NavRoutes.Student.route) { StudentScreen() }
+        composable(NavRoutes.Teacher.route) { TeacherScreen() }
+        composable(NavRoutes.Representante.route) { RepresentanteScreen() }
     }
 }
-

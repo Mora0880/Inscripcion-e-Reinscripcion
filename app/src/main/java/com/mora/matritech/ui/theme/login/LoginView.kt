@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mora.matritech.data.repository.AuthRepository
 import com.mora.matritech.data.repository.AuthResult
+import com.mora.matritech.model.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +13,9 @@ import kotlinx.coroutines.launch
 data class LoginUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val userRole: UserRole? = null
 )
 
 class LoginViewModel : ViewModel() {
@@ -24,38 +27,48 @@ class LoginViewModel : ViewModel() {
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            // Validaciones
-            if (email.isBlank() || password.isBlank()) {
-                _uiState.value = LoginUiState(
-                    errorMessage = "Por favor completa todos los campos"
-                )
-                return@launch
-            }
 
-            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                _uiState.value = LoginUiState(
-                    errorMessage = "Correo electrónico inválido"
-                )
-                return@launch
-            }
-
-            // Mostrar loading
+            // Loading
             _uiState.value = LoginUiState(isLoading = true)
 
-            // Intentar login
             when (val result = authRepository.signIn(email, password)) {
+
                 is AuthResult.Success -> {
-                    _uiState.value = LoginUiState(isSuccess = true)
+                    val user = result.user
+
+                    // Leer rol del usuario
+                    val roleId = user?.rol_id
+                    val userRole = when (roleId) {
+                        1 -> UserRole.ADMIN
+                        2 -> UserRole.COORDINATOR
+                        3 -> UserRole.STUDENT
+                        4 -> UserRole.TEACHER
+                        5 -> UserRole.REPRESENTANTE
+                        else -> null
+                    }
+
+                    // Actualizar el UI state
+                    _uiState.value = LoginUiState(
+                        isLoading = false,
+                        isSuccess = true,
+                        isLoggedIn = true,
+                        userRole = userRole
+                    )
                 }
+
                 is AuthResult.Error -> {
                     _uiState.value = LoginUiState(
+                        isLoading = false,
                         errorMessage = result.message
                     )
                 }
+
                 else -> {}
             }
         }
     }
+
+
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
