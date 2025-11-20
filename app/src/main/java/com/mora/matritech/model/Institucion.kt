@@ -7,7 +7,7 @@ import java.util.UUID
 @Serializable
 data class Institucion(
     @SerialName("id")
-    val id: String = UUID.randomUUID().toString(),
+    val id: String? = null,
 
     @SerialName("nombre_institucion")
     val nombre: String = "",

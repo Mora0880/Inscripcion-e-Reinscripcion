@@ -1,11 +1,13 @@
 package com.mora.matritech.data.repository
 
 import com.mora.matritech.model.Institucion
+import com.mora.matritech.utils.putNullable
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 
 class InstitucionRepository (
@@ -47,9 +49,21 @@ class InstitucionRepository (
 
     suspend fun createInstitucion(institucion: Institucion): Result<Institucion> = withContext(Dispatchers.IO) {
         try {
+            val json = buildJsonObject {
+                put("nombre_institucion", institucion.nombre)
+                putNullable("provincia", institucion.provincia)
+                putNullable("direccion_especifica", institucion.direccion)
+                putNullable("codigo_identificacion", institucion.codigoIdentificacion)
+                putNullable("ano_laboracion", institucion.anoLaboracion)
+                putNullable("tipo_institucion", institucion.tipoInstitucion)
+                putNullable("nivel_educativo", institucion.nivelEducativo)
+                putNullable("regimen", institucion.regimen)
+                putNullable("contacto", institucion.contacto)
+            }
+
             val created = supabaseClient
                 .from(TABLE_NAME)
-                .insert(institucion) {
+                .insert(json) {
                     select()
                 }
                 .decodeSingle<Institucion>()
@@ -59,14 +73,13 @@ class InstitucionRepository (
             Result.failure(e)
         }
     }
-
     suspend fun updateInstitucion(institucion: Institucion): Result<Institucion> = withContext(Dispatchers.IO) {
         try {
             val updated = supabaseClient
                 .from(TABLE_NAME)
                 .update(institucion) {
                     filter {
-                        eq("id", institucion.id)
+                        eq("id", institucion.id!!)
                     }
                     select()
                 }

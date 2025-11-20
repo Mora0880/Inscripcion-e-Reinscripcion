@@ -159,7 +159,7 @@ fun InstitucionDialog(
                 onClick = {
                     if (validateFields()) {
                         val nuevaInstitucion = Institucion(
-                            id = institucion?.id ?: "",
+                            id = institucion?.id,
                             nombre = nombre.trim(),
                             provincia = provincia.trim().ifBlank { null },
                             direccion = direccion.trim().ifBlank { null },

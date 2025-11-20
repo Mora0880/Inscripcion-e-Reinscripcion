@@ -60,7 +60,7 @@ fun InstitucionesScreen(
                     InstitucionesList(
                         instituciones = uiState.instituciones,
                         onEdit = { viewModel.onEvent(InstitucionEvent.SelectInstitucion(it)) },
-                        onDelete = { viewModel.onEvent(InstitucionEvent.DeleteInstitucion(it.id)) }
+                        onDelete = { viewModel.onEvent(InstitucionEvent.DeleteInstitucion(it.id.orEmpty())) }
                     )
                 }
             }

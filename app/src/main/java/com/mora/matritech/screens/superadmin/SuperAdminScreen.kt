@@ -31,12 +31,64 @@ fun SuperAdminScreen() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    var currentRoute by remember { mutableStateOf(SuperAdminRoute.Dashboard.route) }
+    val currentRoute by remember(navController) {
+        derivedStateOf {
+            navController.currentBackStackEntry?.destination?.route ?: SuperAdminRoute.Dashboard.route
+        }
+    }
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun SuperAdminScreen() {
+        // MUEVE EL navController FUERA del composable (clave #1)
+        val navController = rememberNavController()
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+        val scope = rememberCoroutineScope()
 
-    // Observar cambios de ruta
-    LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect { backStackEntry ->
-            currentRoute = backStackEntry.destination.route ?: SuperAdminRoute.Dashboard.route
+        // Usa una clave estable para evitar recrear el flow en cada recomposición (clave #2)
+
+        // CLAVE #3: Usa snapshotFlow en vez de currentBackStackEntryFlow + clave estable
+        // REEMPLAZA todo el LaunchedEffect por esto:
+        val currentRoute by produceState(initialValue = SuperAdminRoute.Dashboard.route, key1 = navController) {
+            snapshotFlow { navController.currentBackStackEntry?.destination?.route }
+                .collect { value = it ?: SuperAdminRoute.Dashboard.route }
+        }
+
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                SuperAdminDrawer(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        scope.launch { drawerState.close() }
+                    }
+                )
+            }
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(getCurrentTitle(currentRoute)) },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menú")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                }
+            ) { padding ->
+                SuperAdminNavHost(
+                    navController = navController,
+                    modifier = Modifier.padding(padding)
+                )
+            }
         }
     }
 
@@ -47,7 +99,7 @@ fun SuperAdminScreen() {
                 currentRoute = currentRoute,
                 onNavigate = { route ->
                     navController.navigate(route) {
-                        popUpTo(SuperAdminRoute.Dashboard.route) { saveState = true }
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }

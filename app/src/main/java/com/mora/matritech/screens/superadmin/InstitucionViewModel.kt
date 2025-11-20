@@ -2,10 +2,12 @@ package com.mora.matritech.screens.superadmin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mora.matritech.data.remote.supabase
 import com.mora.matritech.model.Institucion
 import com.mora.matritech.model.InstitucionEvent
 import com.mora.matritech.model.InstitucionesUiState
 import com.mora.matritech.data.repository.InstitucionRepository
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,20 +62,20 @@ class InstitucionViewModel(
         }
     }
 
-    private fun createInstitucion(institucion: Institucion) {
+    fun createInstitucion(institucion: Institucion) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-
-            repository.createInstitucion(institucion)
+            repository.createInstitucion(institucion.copy(id = null))  // ← fuerza null
                 .onSuccess {
                     loadInstituciones()
                     hideDialog()
+                    _uiState.update { it.copy(isLoading = false) }
                 }
                 .onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = "Error al crear institución: ${error.message}"
+                            error = "Error al crear: ${error.message}"
                         )
                     }
                 }
