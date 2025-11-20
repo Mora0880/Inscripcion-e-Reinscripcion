@@ -19,6 +19,7 @@ import com.mora.matritech.screens.representante.RepresentanteScreen
 import com.mora.matritech.screens.student.StudentScreen
 import com.mora.matritech.screens.teaching.TeacherScreen
 import com.mora.matritech.ui.login.LoginViewModel
+import com.mora.matritech.screens.superadmin.SuperAdminScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +54,9 @@ fun AppNavigation() {
         composable(NavRoutes.Login.route) {
             LoginScreen(navController, loginViewModel)
         }
+
+        // ← AGREGAR ESTA LÍNEA
+        composable(NavRoutes.SuperAdmin.route) { SuperAdminScreen() }
 
         composable(NavRoutes.Admin.route) { AdminScreen() }
         composable(NavRoutes.Coordinator.route) { CoordinatorScreen() }

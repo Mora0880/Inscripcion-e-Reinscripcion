@@ -37,15 +37,9 @@ class LoginViewModel : ViewModel() {
                     val user = result.user
 
                     // Leer rol del usuario
+                    // Leer rol del usuario
                     val roleId = user?.rol_id
-                    val userRole = when (roleId) {
-                        1 -> UserRole.ADMIN
-                        2 -> UserRole.COORDINATOR
-                        3 -> UserRole.STUDENT
-                        4 -> UserRole.TEACHER
-                        5 -> UserRole.REPRESENTANTE
-                        else -> null
-                    }
+                    val userRole = UserRole.fromId(roleId)
 
                     // Actualizar el UI state
                     _uiState.value = LoginUiState(
