@@ -15,7 +15,8 @@ data class AdminStats(
 
 data class AdminUiState(
     val selectedBottomItem: String = "home",
-    val stats: AdminStats = AdminStats()
+    val stats: AdminStats = AdminStats(),
+    val isDrawerOpen: Boolean = false
 )
 
 class AdminViewModel : ViewModel() {
@@ -26,15 +27,21 @@ class AdminViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(selectedBottomItem = item)
     }
 
-    // Aquí más adelante pondrás llamadas reales a Supabase para cargar estadísticas
+    fun openDrawer() {
+        _uiState.value = _uiState.value.copy(isDrawerOpen = true)
+    }
+
+    fun closeDrawer() {
+        _uiState.value = _uiState.value.copy(isDrawerOpen = false)
+    }
+
     init {
         loadStats()
     }
 
     private fun loadStats() {
         viewModelScope.launch {
-            // TODO: aquí llamas a Supabase para traer los números reales
-            // por ahora usamos datos falsos
+            // Llamadas reales más adelante
         }
     }
 }
