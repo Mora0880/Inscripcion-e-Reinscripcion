@@ -5,4 +5,6 @@ import androidx.compose.material3.Text
 
 // screens/AdminScreen.kt
 @Composable
-fun CoordinatorScreen() { Text("Pantalla del coordinador") }
+fun CoordinatorScreen() {
+
+}
