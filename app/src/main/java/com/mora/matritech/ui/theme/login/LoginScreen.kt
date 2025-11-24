@@ -15,10 +15,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.mora.matritech.R
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mora.matritech.model.UserRole
 import com.mora.matritech.ui.NavRoutes
+import com.mora.matritech.ui.theme.MatriTechTheme
 
 @Composable
 fun LogoImage() {
@@ -124,4 +126,5 @@ fun LoginScreen(
         }
     }
 }
+
 

@@ -7,4 +7,6 @@ import androidx.compose.material3.Text
 
 
 @Composable
-fun StudentScreen() { Text("Pantalla del Estudiante") }
+fun StudentScreen() {
+
+}
