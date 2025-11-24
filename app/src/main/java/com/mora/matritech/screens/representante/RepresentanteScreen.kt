@@ -8,12 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.*
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
@@ -22,9 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,6 +30,44 @@ import com.mora.matritech.ui.theme.MatriTechTheme
 import kotlinx.coroutines.launch
 
 
+
+
+// ----------------------------------------------------
+// CARD INDIVIDUAL DE ESTADÍSTICA
+// ----------------------------------------------------
+@Composable
+fun StatCard(
+    icon: ImageVector,
+    number: String,
+    label: String,
+    background: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(100.dp)
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(55.dp)
+                .clip(CircleShape)
+                .background(background),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color(0xFF1A237E),
+                modifier = Modifier.size(30.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(number, fontSize = 22.sp, color = Color(0xFF1A237E))
+        Text(label, fontSize = 14.sp, color = Color.Gray)
+    }
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,14 +101,11 @@ fun RepresentanteScreen() {
     ) {
         Scaffold(
 
-            // ---------- TOP BAR FIJA ----------
             topBar = {
                 TopAppBar(
                     title = { },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = "menu",
@@ -83,76 +114,37 @@ fun RepresentanteScreen() {
                         }
                     },
                     actions = {
-
                         IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "notificaciones",
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .width(40.dp)
-                            )
+                            Icon(Icons.Default.Notifications, null, Modifier.size(35.dp))
                         }
-
                         IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "perfil",
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .width(40.dp)
-                            )
+                            Icon(Icons.Default.AccountCircle, null, Modifier.size(35.dp))
                         }
                     }
                 )
             },
 
-            // ---------- BOTTOM BAR FIJA ----------
             bottomBar = {
-                NavigationBar(containerColor = Color(0xFFFFFFFF)) {
+                NavigationBar(containerColor = Color.White) {
 
                     NavigationBarItem(
                         selected = selectedBottom == "home",
                         onClick = { selectedBottom = "home" },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "home",
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .width(40.dp)
-                            )
-                        },
+                        icon = { Icon(Icons.Default.Home, null, Modifier.size(28.dp)) },
                         label = { Text("Inicio") }
                     )
 
                     NavigationBarItem(
                         selected = selectedBottom == "hijos",
                         onClick = { selectedBottom = "hijos" },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "hijos",
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .width(40.dp)
-                            )
-                        },
+                        icon = { Icon(Icons.Default.AccountCircle, null, Modifier.size(28.dp)) },
                         label = { Text("Hijos") }
                     )
 
                     NavigationBarItem(
                         selected = selectedBottom == "ajustes",
                         onClick = { selectedBottom = "ajustes" },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "ajustes",
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .width(40.dp)
-                            )
-                        },
+                        icon = { Icon(Icons.Default.Settings, null, Modifier.size(28.dp)) },
                         label = { Text("Ajustes") }
                     )
                 }
@@ -160,7 +152,6 @@ fun RepresentanteScreen() {
 
         ) { innerPadding ->
 
-            // ---------- CONTENIDO SCROLLABLE ----------
             LazyColumn(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -168,60 +159,56 @@ fun RepresentanteScreen() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
+                // ----------------------------------------------------
+                // ENCABEZADO CON DEGRADADO + TÍTULO
+                // ----------------------------------------------------
                 item {
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text("Panel de Representante", fontSize = 20.sp, color = Color.Gray)
-
-                    Spacer(modifier = Modifier.height(25.dp))
-
-                    @Composable
-                    fun StatCard(
-                        icon: ImageVector,
-                        number: String,
-                        label: String,
-                        background: Color
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.width(90.dp)
-                        ) {
-
-                            // Ícono redondito con fondo suave
-                            Box(
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .background(background),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = null,
-                                    tint = Color(0xFF1A237E),
-                                    modifier = Modifier.size(28.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0xFF1A237E),
+                                        Color(0xFF3F51B5)
+                                    )
                                 )
-                            }
+                            )
+                            .padding(vertical = 30.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                            Text(number, fontSize = 20.sp, color = Color(0xFF1A237E))
 
-                            Text(label, fontSize = 13.sp, color = Color.Gray)
+
+                            Spacer(modifier = Modifier.height(15.dp))
+
+                            Text(
+                                "Panel del Representante",
+                                fontSize = 22.sp,
+                                color = Color.White
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(22.dp))
+
+                    // ----------------------------------------------------
+                    // TARJETA DE ESTADÍSTICAS
+                    // ----------------------------------------------------
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F9FC)),
-                        elevation = CardDefaults.cardElevation(6.dp)
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(8.dp)
                     ) {
                         Column(
-                            modifier = Modifier
-                                .padding(horizontal = 10.dp, vertical = 15.dp)
+                            modifier = Modifier.padding(20.dp)
                         ) {
                             Text(
                                 "Resumen Académico",
@@ -236,21 +223,21 @@ fun RepresentanteScreen() {
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 StatCard(
-                                    icon = Icons.Default.AccountCircle,
+                                    icon = Icons.Default.Build,
                                     number = "7%",
                                     label = "Materias",
                                     background = Color(0xFFE3F2FD)
                                 )
 
                                 StatCard(
-                                    icon = Icons.Default.Notifications,
+                                    icon = Icons.Default.Build,
                                     number = "8",
-                                    label = "Class/Week",
+                                    label = "Clases/sem",
                                     background = Color(0xFFE8F5E9)
                                 )
 
                                 StatCard(
-                                    icon = Icons.Default.Search,
+                                    icon = Icons.Default.Star,
                                     number = "13",
                                     label = "Notas",
                                     background = Color(0xFFFFF3E0)
@@ -259,33 +246,12 @@ fun RepresentanteScreen() {
                         }
                     }
 
-
                     Spacer(modifier = Modifier.height(30.dp))
-
-                    // Buscador
-                    var searchQuery by remember { mutableStateOf("") }
-
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Buscar hijo o grado...") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(horizontal = 20.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
 
-                // ---------- LISTA DE HIJOS (ejemplo) ----------
+                // ----------------------------------------------------
+                // LISTA DE HIJOS
+                // ----------------------------------------------------
                 items(listOf("Juan Pérez", "Ana López", "María Torres")) { name ->
                     Card(
                         modifier = Modifier
@@ -326,14 +292,11 @@ fun RepresentanteScreen() {
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(50.dp))
-                }
+                item { Spacer(modifier = Modifier.height(50.dp)) }
             }
         }
     }
 }
-
 
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -343,6 +306,3 @@ fun RepresentanteScreenPreview() {
         RepresentanteScreen()
     }
 }
-
-
-

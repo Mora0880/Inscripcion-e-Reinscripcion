@@ -13,9 +13,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.*
 import com.mora.matritech.screens.admin.AdminScreen
 import com.mora.matritech.screens.coordinator.CoordinatorScreen
+import com.mora.matritech.screens.coordinator.CoordinatorViewModel
 import com.mora.matritech.screens.representante.RepresentanteScreen
 import com.mora.matritech.screens.student.StudentScreen
 import com.mora.matritech.screens.teaching.TeacherScreen
+import com.mora.matritech.screens.teaching.TeacherViewModel
 import com.mora.matritech.ui.login.LoginViewModel
 
 class MainActivity : ComponentActivity() {
@@ -36,6 +38,7 @@ fun AppNavigation() {
 
     val loginState by loginViewModel.uiState.collectAsState()
 
+
     NavHost(
         navController = navController,
         startDestination = NavRoutes.Splash.route
@@ -53,9 +56,17 @@ fun AppNavigation() {
         }
 
         composable(NavRoutes.Admin.route) { AdminScreen() }
-        composable(NavRoutes.Coordinator.route) { CoordinatorScreen() }
+
+        composable(NavRoutes.Coordinator.route) {
+            val coordinatorViewModel: CoordinatorViewModel = viewModel()
+            CoordinatorScreen(coordinatorViewModel)
+        }
         composable(NavRoutes.Student.route) { StudentScreen() }
-        composable(NavRoutes.Teacher.route) { TeacherScreen() }
+
+        composable(NavRoutes.Teacher.route) {
+            val teacherViewModel: TeacherViewModel = viewModel()
+            TeacherScreen(teacherViewModel)
+        }
         composable(NavRoutes.Representante.route) { RepresentanteScreen() }
     }
 }
