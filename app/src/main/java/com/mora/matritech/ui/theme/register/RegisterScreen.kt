@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.mora.matritech.ui.NavRoutes
+import com.mora.matritech.ui.theme.NavRoutes
 import com.mora.matritech.ui.theme.register.RegisterViewModel
 import com.mora.matritech.model.UserRole  // ← IMPORT IMPORTANTE
 import androidx.navigation.compose.rememberNavController
@@ -50,7 +50,7 @@ fun RegisterScreen(
         if (uiState.isSuccess) {
             println("✅ Navegando a Login después del registro")
             navController.navigate(NavRoutes.Login.route) {
-                popUpTo(NavRoutes.register.route) { inclusive = true }
+                popUpTo(NavRoutes.Register.route) { inclusive = true }
             }
         }
     }
@@ -194,7 +194,7 @@ fun RegisterScreen(
             TextButton(
                 onClick = {
                     navController.navigate(NavRoutes.Login.route) {
-                        popUpTo(NavRoutes.register.route) { inclusive = true }
+                        popUpTo(NavRoutes.Register.route) { inclusive = true }
                     }
                 },
                 enabled = !uiState.isLoading

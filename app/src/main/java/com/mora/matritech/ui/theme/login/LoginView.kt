@@ -1,7 +1,8 @@
-package com.mora.matritech.ui.login
+package com.mora.matritech.ui.theme.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mora.matritech.data.local.SessionManager
 import com.mora.matritech.data.repository.AuthRepository
 import com.mora.matritech.data.repository.AuthResult
 import com.mora.matritech.model.UserRole
@@ -18,25 +19,22 @@ data class LoginUiState(
     val userRole: UserRole? = null
 )
 
-class LoginViewModel : ViewModel() {
-
-    private val authRepository = AuthRepository()
+class LoginViewModel(
+    private val authRepository: AuthRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-
-            // Loading
             _uiState.value = LoginUiState(isLoading = true)
 
             when (val result = authRepository.signIn(email, password)) {
-
                 is AuthResult.Success -> {
                     val user = result.user
 
-                    // Leer rol del usuario
                     val roleId = user?.rol_id
                     val userRole = when (roleId) {
                         1 -> UserRole.ADMIN
@@ -47,7 +45,12 @@ class LoginViewModel : ViewModel() {
                         else -> null
                     }
 
-                    // Actualizar el UI state
+                    // ✅ GUARDAR SESIÓN usando tu SessionManager
+                    sessionManager.saveSession(
+                        userId = user?.id,
+                        role = userRole?.name ?: ""
+                    )
+
                     _uiState.value = LoginUiState(
                         isLoading = false,
                         isSuccess = true,
@@ -63,12 +66,10 @@ class LoginViewModel : ViewModel() {
                     )
                 }
 
-                else -> {}
+                AuthResult.Loading -> TODO()
             }
         }
     }
-
-
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)

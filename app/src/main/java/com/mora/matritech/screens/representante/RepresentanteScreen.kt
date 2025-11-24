@@ -2,6 +2,7 @@ package com.mora.matritech.screens.representante
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,11 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.*
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,16 +18,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.mora.matritech.R
-import com.mora.matritech.ui.theme.MatriTechTheme
+import com.mora.matritech.data.local.SessionManager
+import com.mora.matritech.ui.theme.NavRoutes
 import kotlinx.coroutines.launch
-
-
-
 
 // ----------------------------------------------------
 // CARD INDIVIDUAL DE ESTADÍSTICA
@@ -46,7 +42,6 @@ fun StatCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(100.dp)
     ) {
-
         Box(
             modifier = Modifier
                 .size(55.dp)
@@ -69,10 +64,12 @@ fun StatCard(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepresentanteScreen() {
+fun RepresentanteScreen(navController: NavHostController) {
+
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -91,16 +88,56 @@ fun RepresentanteScreen() {
             ) {
                 Text("Menú", fontSize = 22.sp)
                 Spacer(modifier = Modifier.height(20.dp))
-                Text("Inicio", fontSize = 18.sp)
+
+                Text(
+                    "Inicio",
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            scope.launch { drawerState.close() }
+                            selectedBottom = "home"
+                        }
+                        .padding(vertical = 8.dp)
+                )
+
                 Spacer(modifier = Modifier.height(14.dp))
-                Text("Configuraciones", fontSize = 18.sp)
+
+                Text(
+                    "Configuraciones",
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            scope.launch { drawerState.close() }
+                            selectedBottom = "ajustes"
+                        }
+                        .padding(vertical = 8.dp)
+                )
+
                 Spacer(modifier = Modifier.height(14.dp))
-                Text("Cerrar Sesión", fontSize = 18.sp)
+
+                // ✅ BOTÓN DE CERRAR SESIÓN FUNCIONAL
+                Text(
+                    "Cerrar Sesión",
+                    fontSize = 18.sp,
+                    color = Color(0xFFD32F2F),  // Color rojo para cerrar sesión
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            scope.launch { drawerState.close() }
+                            sessionManager.logout()
+                            navController.navigate(NavRoutes.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                        .padding(vertical = 8.dp)
+                )
             }
         }
     ) {
         Scaffold(
-
             topBar = {
                 TopAppBar(
                     title = { },
@@ -126,7 +163,6 @@ fun RepresentanteScreen() {
 
             bottomBar = {
                 NavigationBar(containerColor = Color.White) {
-
                     NavigationBarItem(
                         selected = selectedBottom == "home",
                         onClick = { selectedBottom = "home" },
@@ -177,11 +213,7 @@ fun RepresentanteScreen() {
                             .padding(vertical = 30.dp),
                         contentAlignment = Alignment.Center
                     ) {
-
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-
-
                             Spacer(modifier = Modifier.height(15.dp))
 
                             Text(
@@ -203,7 +235,7 @@ fun RepresentanteScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp),
-                        shape = RoundedCornerShape(24.dp),
+                        shape = RoundedCornerShape(5.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(8.dp)
                     ) {
@@ -257,7 +289,7 @@ fun RepresentanteScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(5.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(6.dp)
                     ) {
@@ -267,7 +299,6 @@ fun RepresentanteScreen() {
                                 .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
                             Box(
                                 modifier = Modifier
                                     .size(50.dp)
@@ -295,14 +326,5 @@ fun RepresentanteScreen() {
                 item { Spacer(modifier = Modifier.height(50.dp)) }
             }
         }
-    }
-}
-
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun RepresentanteScreenPreview() {
-    MatriTechTheme {
-        RepresentanteScreen()
     }
 }
