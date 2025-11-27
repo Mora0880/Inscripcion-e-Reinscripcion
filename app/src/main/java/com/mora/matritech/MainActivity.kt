@@ -3,14 +3,14 @@ package com.mora.matritech
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.*
+import com.mora.matritech.ui.NavRoutes
+import com.mora.matritech.ui.login.LoginScreen
+import com.mora.matritech.ui.theme.MatriTechTheme
+import com.mora.matritech.ui.Splash.SplashScreen
+import com.mora.matritech.ui.theme.register.RegisterScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.mora.matritech.data.local.SessionManager
-import com.mora.matritech.data.repository.AuthRepository
+import androidx.compose.runtime.*
 import com.mora.matritech.screens.admin.AdminScreen
 import com.mora.matritech.screens.coordinator.CoordinatorScreen
 import com.mora.matritech.screens.coordinator.CoordinatorViewModel
@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
+
 
     NavHost(
         navController = navController,
@@ -79,15 +80,20 @@ fun AppNavigation() {
             StudentScreen(navController)  // ✅ Agregado navController
         }
 
+        composable(NavRoutes.Admin.route) { AdminScreen() }
+
+        composable(NavRoutes.Coordinator.route) {
+            val coordinatorViewModel: CoordinatorViewModel = viewModel()
+            CoordinatorScreen(coordinatorViewModel)
+        }
+        composable(NavRoutes.Student.route) { StudentScreen() }
+
         composable(NavRoutes.Teacher.route) {
             val teacherViewModel: TeacherViewModel = viewModel()
-            TeacherScreen(teacherViewModel, navController)  // ✅ Agregado navController - CORREGIDO
+            TeacherScreen(teacherViewModel)
         }
-
-        composable(NavRoutes.Representante.route) {
-            RepresentanteScreen(navController)  // ✅ Agregado navController
-        }
-
-        composable(NavRoutes.SuperAdmin.route) { SuperAdminScreen() }
+        composable(NavRoutes.Representante.route) { RepresentanteScreen() }
+        
+          composable(NavRoutes.SuperAdmin.route) { SuperAdminScreen() }
     }
 }
