@@ -1,4 +1,4 @@
-package com.mora.matritech.ui.home
+package com.mora.matritech.ui.theme.splash
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
