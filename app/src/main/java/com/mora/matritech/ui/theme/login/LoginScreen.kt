@@ -48,6 +48,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.isLoggedIn, uiState.userRole) {
         if (uiState.isLoggedIn && uiState.userRole != null) {
             val route = when (uiState.userRole) {
+                UserRole.SUPER_ADMIN -> NavRoutes.SuperAdmin.route
                 UserRole.ADMIN -> NavRoutes.Admin.route
                 UserRole.COORDINATOR -> NavRoutes.Coordinator.route
                 UserRole.STUDENT -> NavRoutes.Student.route

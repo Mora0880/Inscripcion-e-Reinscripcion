@@ -15,6 +15,7 @@ data class Role(
  * Enum para facilitar el manejo de roles en la app
  */
 enum class UserRole(val id: Int, val roleName: String, val displayName: String) {
+    SUPER_ADMIN(0, "super_admin", "Super Administrador"),
     ADMIN(1, "administrador", "Administrador"),
     COORDINATOR(2, "coordinador_academico", "Coordinador Académico"),
     STUDENT(3, "estudiante", "Estudiante"),
@@ -22,9 +23,11 @@ enum class UserRole(val id: Int, val roleName: String, val displayName: String) 
     REPRESENTANTE(5, "representante_tutor", "Representante/Tutor");
 
     companion object {
-        fun fromId(id: Int): UserRole? = entries.find { it.id == id }
-        fun fromName(name: String): UserRole? = entries.find { it.roleName == name }
+        fun fromId(id: Int?): UserRole? {  // ← Cambia Int a Int?
+            return values().find { it.id == id }
+        }
 
-        fun getAllRoles(): List<UserRole> = entries
+        fun getAllRoles(): List<UserRole> = values().toList()
+
     }
 }
