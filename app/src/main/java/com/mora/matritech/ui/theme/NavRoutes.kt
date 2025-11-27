@@ -1,14 +1,13 @@
-
-package com.mora.matritech.ui
+package com.mora.matritech.ui.theme
 
 sealed class NavRoutes(val route: String) {
-    object Splash : NavRoutes("Splash")
+    object Splash : NavRoutes("splash")
 
-    object register : NavRoutes("Register")
-    object Login : NavRoutes("Login")
-    object Home : NavRoutes("Home")
-    object SuperAdmin : NavRoutes("superadmin")
+    object Register : NavRoutes("register")
+    object Login : NavRoutes("login")
+    object Home : NavRoutes("home")
     object Admin : NavRoutes("admin")
+    object SuperAdmin : NavRoutes("superadmin")
     object Coordinator : NavRoutes("coordinator")
     object Student : NavRoutes("student")
     object Teacher : NavRoutes("teacher")
