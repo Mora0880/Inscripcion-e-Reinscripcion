@@ -4,13 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.*
-import com.mora.matritech.ui.NavRoutes
-import com.mora.matritech.ui.login.LoginScreen
 import com.mora.matritech.ui.theme.MatriTechTheme
-import com.mora.matritech.ui.Splash.SplashScreen
 import com.mora.matritech.ui.theme.register.RegisterScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import com.mora.matritech.data.local.SessionManager
+import com.mora.matritech.data.repository.AuthRepository
 import com.mora.matritech.screens.admin.AdminScreen
 import com.mora.matritech.screens.coordinator.CoordinatorScreen
 import com.mora.matritech.screens.coordinator.CoordinatorViewModel
@@ -84,15 +84,15 @@ fun AppNavigation() {
 
         composable(NavRoutes.Coordinator.route) {
             val coordinatorViewModel: CoordinatorViewModel = viewModel()
-            CoordinatorScreen(coordinatorViewModel)
+            CoordinatorScreen(coordinatorViewModel, navController)
         }
-        composable(NavRoutes.Student.route) { StudentScreen() }
+        composable(NavRoutes.Student.route) { StudentScreen(navController) }
 
         composable(NavRoutes.Teacher.route) {
             val teacherViewModel: TeacherViewModel = viewModel()
-            TeacherScreen(teacherViewModel)
+            TeacherScreen(teacherViewModel, navController)
         }
-        composable(NavRoutes.Representante.route) { RepresentanteScreen() }
+        composable(NavRoutes.Representante.route) { RepresentanteScreen(navController) }
         
           composable(NavRoutes.SuperAdmin.route) { SuperAdminScreen() }
     }
