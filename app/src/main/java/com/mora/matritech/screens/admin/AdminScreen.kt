@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,50 +22,51 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.mora.matritech.data.local.SessionManager
+import com.mora.matritech.ui.theme.NavRoutes
+import kotlinx.coroutines.launch
 
 // -----------------------------------------------------------------
-// VIEWMODEL (el que ya tenías, solo lo importamos correctamente)
-// -----------------------------------------------------------------
-// Ya lo tienes en otro archivo, así que solo lo usamos:
-// (Si está en el mismo archivo, déjalo arriba. Si está en otro, quita las clases de abajo)
-
-// -----------------------------------------------------------------
-// PANTALLA PRINCIPAL - ACTUALIZADA PARA USAR isDrawerOpen del ViewModel
+// PANTALLA PRINCIPAL - CON CIERRE DE SESIÓN FUNCIONAL
 // -----------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(
-    navController: NavHostController = rememberNavController(),
-    viewModel: AdminViewModel = viewModel()
+    navController: NavHostController,
+    viewModel: AdminViewModel = viewModel()  // ← Ya existe en otro archivo
 ) {
     val uiState by viewModel.uiState
-    val drawerState = rememberDrawerState(
-        initialValue = if (uiState.isDrawerOpen) DrawerValue.Open else DrawerValue.Closed
-    )
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
-    // Sincronizamos el estado del drawer físico con el del ViewModel
+    // Sincronizar drawer con ViewModel
     LaunchedEffect(uiState.isDrawerOpen) {
-        if (uiState.isDrawerOpen && drawerState.isClosed) {
-            drawerState.open()
-        } else if (!uiState.isDrawerOpen && drawerState.isOpen) {
-            drawerState.close()
-        }
+        if (uiState.isDrawerOpen) drawerState.open() else drawerState.close()
     }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             AdminDrawerContent(
-                onItemClicked = { viewModel.closeDrawer() }
+                onItemClick = {
+                    scope.launch { drawerState.close() }
+                    viewModel.closeDrawer()
+                },
+                onLogout = {
+                    sessionManager.logout()
+                    navController.navigate(NavRoutes.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         },
         content = {
             Scaffold(
                 topBar = {
-                    AdminTopBar(
-                        onMenuClick = { viewModel.openDrawer() }
-                    )
+                    AdminTopBar(onMenuClick = { viewModel.openDrawer() })
                 },
                 bottomBar = {
                     AdminBottomBar(
@@ -94,29 +96,43 @@ fun AdminScreen(
 }
 
 // -----------------------------------------------------------------
-// DRAWER
+// DRAWER CON CIERRE DE SESIÓN FUNCIONAL
 // -----------------------------------------------------------------
 @Composable
-fun AdminDrawerContent(onItemClicked: () -> Unit) {
+fun AdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .width(260.dp)
+            .width(280.dp)
             .background(Color(0xFF121212))
             .padding(16.dp)
     ) {
         Text(
-            "Menú",
-            fontSize = 18.sp,
+            "Menú Administrador",
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        DrawerItem("Usuarios", Icons.Default.People, onItemClicked)
-        DrawerItem("Reportes", Icons.Default.Assessment, onItemClicked)
-        DrawerItem("Configuración", Icons.Default.Settings, onItemClicked)
-        DrawerItem("Cerrar sesión", Icons.Default.Logout, onItemClicked)
+        DrawerItem("Dashboard", Icons.Default.Dashboard, onItemClick)
+        DrawerItem("Usuarios", Icons.Default.People, onItemClick)
+        DrawerItem("Reportes", Icons.Default.Assessment, onItemClick)
+        DrawerItem("Configuración", Icons.Default.Settings, onItemClick)
+        DrawerItem("Notificaciones", Icons.Default.Notifications, onItemClick)
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        Divider(color = Color.Gray.copy(alpha = 0.3f))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        DrawerItem(
+            title = "Cerrar Sesión",
+            icon = Icons.Default.Logout,
+            onClick = onLogout,
+            textColor = Color(0xFFE57373),
+            iconTint = Color(0xFFE57373)
+        )
     }
 }
 
@@ -124,7 +140,9 @@ fun AdminDrawerContent(onItemClicked: () -> Unit) {
 fun DrawerItem(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    textColor: Color = Color.White,
+    iconTint: Color = Color.Gray
 ) {
     Row(
         modifier = Modifier
@@ -133,9 +151,9 @@ fun DrawerItem(
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = Color.Gray)
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
-        Text(title, fontSize = 16.sp, color = Color.White)
+        Text(title, fontSize = 16.sp, color = textColor, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -146,7 +164,7 @@ fun DrawerItem(
 @Composable
 private fun AdminTopBar(onMenuClick: () -> Unit) {
     TopAppBar(
-        title = { Text("") },
+        title = { Text("Panel de Administración", fontWeight = FontWeight.SemiBold) },
         navigationIcon = {
             IconButton(onClick = onMenuClick) {
                 Icon(Icons.Default.Menu, contentDescription = "Abrir menú", tint = Color.Gray)
@@ -178,8 +196,8 @@ private fun AdminBottomBar(selectedItem: String, onItemSelected: (String) -> Uni
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomIcon("home", selectedItem, onItemSelected, Icons.Default.Home)
-            BottomIcon("add", selectedItem, onItemSelected, Icons.Default.AddCircle)
-            BottomIcon("chat", selectedItem, onItemSelected, Icons.Default.Chat)
+            BottomIcon("users", selectedItem, onItemSelected, Icons.Default.People)
+            BottomIcon("reports", selectedItem, onItemSelected, Icons.Default.Assessment)
         }
     }
 }
@@ -202,7 +220,7 @@ private fun BottomIcon(
 }
 
 // -----------------------------------------------------------------
-// HEADER, STATS Y ACCIONES RÁPIDAS (sin cambios)
+// HEADER, ESTADÍSTICAS Y ACCIONES (sin cambios)
 // -----------------------------------------------------------------
 @Composable
 private fun AdminHeader() {
@@ -329,5 +347,5 @@ private fun QuickActionCard(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AdminScreenPreview() {
-    AdminScreen()
+    AdminScreen(navController = rememberNavController())
 }

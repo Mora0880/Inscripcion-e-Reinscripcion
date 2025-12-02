@@ -43,7 +43,6 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-
     NavHost(
         navController = navController,
         startDestination = NavRoutes.Splash.route
@@ -80,7 +79,9 @@ fun AppNavigation() {
             StudentScreen(navController)  // ✅ Agregado navController
         }
 
-        composable(NavRoutes.Admin.route) { AdminScreen() }
+        composable(NavRoutes.Admin.route) {
+            AdminScreen(navController)
+        }
 
         composable(NavRoutes.Coordinator.route) {
             val coordinatorViewModel: CoordinatorViewModel = viewModel()
