@@ -1,417 +1,335 @@
 package com.mora.matritech.screens.superadmin
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.mora.matritech.data.remote.SupabaseClient
-import com.mora.matritech.data.repository.InstitucionRepository
+import com.mora.matritech.data.local.SessionManager
+import com.mora.matritech.ui.theme.NavRoutes
 import kotlinx.coroutines.launch
 
-// Rutas de navegación
-sealed class SuperAdminRoute(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    object Dashboard : SuperAdminRoute("dashboard", "Dashboard", Icons.Default.Dashboard)
-    object Instituciones : SuperAdminRoute("instituciones", "Instituciones", Icons.Default.AccountBalance)
-    object Usuarios : SuperAdminRoute("usuarios", "Usuarios", Icons.Default.People)
-    object Reportes : SuperAdminRoute("reportes", "Reportes", Icons.Default.Assessment)
-    object Configuracion : SuperAdminRoute("configuracion", "Configuración", Icons.Default.Settings)
-}
-
+// -----------------------------------------------------------------
+// PANTALLA PRINCIPAL SUPER ADMIN (mismo estilo que Admin)
+// -----------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SuperAdminScreen() {
-    val navController = rememberNavController()
+fun SuperAdminScreen(
+    navController: NavHostController = rememberNavController()
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
-    val currentRoute by remember(navController) {
-        derivedStateOf {
-            navController.currentBackStackEntry?.destination?.route ?: SuperAdminRoute.Dashboard.route
-        }
-    }
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun SuperAdminScreen() {
-        // MUEVE EL navController FUERA del composable (clave #1)
-        val navController = rememberNavController()
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-        val scope = rememberCoroutineScope()
-
-        // Usa una clave estable para evitar recrear el flow en cada recomposición (clave #2)
-
-        // CLAVE #3: Usa snapshotFlow en vez de currentBackStackEntryFlow + clave estable
-        // REEMPLAZA todo el LaunchedEffect por esto:
-        val currentRoute by produceState(initialValue = SuperAdminRoute.Dashboard.route, key1 = navController) {
-            snapshotFlow { navController.currentBackStackEntry?.destination?.route }
-                .collect { value = it ?: SuperAdminRoute.Dashboard.route }
-        }
-
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                SuperAdminDrawer(
-                    currentRoute = currentRoute,
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        scope.launch { drawerState.close() }
-                    }
-                )
-            }
-        ) {
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = { Text(getCurrentTitle(currentRoute)) },
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(Icons.Default.Menu, contentDescription = "Menú")
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    )
-                }
-            ) { padding ->
-                SuperAdminNavHost(
-                    navController = navController,
-                    modifier = Modifier.padding(padding)
-                )
-            }
-        }
-    }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            SuperAdminDrawer(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+            SuperAdminDrawerContent(
+                onItemClick = { scope.launch { drawerState.close() } },
+                onLogout = {
+                    sessionManager.logout()
+                    navController.navigate(NavRoutes.Login.route) {
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
-                        restoreState = true
-                    }
-                    scope.launch {
-                        drawerState.close()
                     }
                 }
             )
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(getCurrentTitle(currentRoute)) },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch {
-                                drawerState.open()
-                            }
-                        }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menú")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+        },
+        content = {
+            Scaffold(
+                topBar = {
+                    SuperAdminTopBar(
+                        onMenuClick = { scope.launch { drawerState.open() } }
                     )
-                )
-            }
-        ) { padding ->
-            SuperAdminNavHost(
-                navController = navController,
-                modifier = Modifier.padding(padding)
-            )
-        }
-    }
-}
-
-@Composable
-fun SuperAdminNavHost(
-    navController: NavHostController,
-    modifier: Modifier = Modifier
-) {
-    // Inicializar repository (manual sin Hilt)
-    val repository = remember {
-        InstitucionRepository(SupabaseClient.client)
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = SuperAdminRoute.Dashboard.route,
-        modifier = modifier
-    ) {
-        composable(SuperAdminRoute.Dashboard.route) {
-            DashboardScreen()
-        }
-        composable(SuperAdminRoute.Instituciones.route) {
-            val viewModel = remember { InstitucionViewModel(repository) }
-            InstitucionesScreen(viewModel = viewModel)
-        }
-        composable(SuperAdminRoute.Usuarios.route) {
-            UsuariosPlaceholderScreen()
-        }
-        composable(SuperAdminRoute.Reportes.route) {
-            ReportesPlaceholderScreen()
-        }
-        composable(SuperAdminRoute.Configuracion.route) {
-            ConfiguracionPlaceholderScreen()
-        }
-    }
-}
-
-@Composable
-fun SuperAdminDrawer(
-    currentRoute: String,
-    onNavigate: (String) -> Unit
-) {
-    ModalDrawerSheet {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 8.dp)
-        ) {
-            // Header
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                },
+                bottomBar = {
+                    SuperAdminBottomBar()
+                }
+            ) { padding ->
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .background(Color(0xFFF5F5F5))
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        Icons.Default.AdminPanelSettings,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "Super Admin",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = "Panel de Control",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    SuperAdminHeader()
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SuperAdminStatisticsSection()
+                    Spacer(modifier = Modifier.height(32.dp))
+                    SuperAdminQuickActions()
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Menu items
-            val menuItems = listOf(
-                SuperAdminRoute.Dashboard,
-                SuperAdminRoute.Instituciones,
-                SuperAdminRoute.Usuarios,
-                SuperAdminRoute.Reportes,
-                SuperAdminRoute.Configuracion
-            )
-
-            menuItems.forEach { item ->
-                NavigationDrawerItem(
-                    icon = { Icon(item.icon, contentDescription = null) },
-                    label = { Text(item.title) },
-                    selected = currentRoute == item.route,
-                    onClick = { onNavigate(item.route) },
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            HorizontalDivider()
-
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Logout, contentDescription = null) },
-                label = { Text("Cerrar Sesión") },
-                selected = false,
-                onClick = { /* TODO: Implementar logout */ },
-                modifier = Modifier.padding(horizontal = 12.dp),
-                colors = NavigationDrawerItemDefaults.colors(
-                    unselectedIconColor = MaterialTheme.colorScheme.error,
-                    unselectedTextColor = MaterialTheme.colorScheme.error
-                )
-            )
         }
-    }
+    )
 }
 
+// -----------------------------------------------------------------
+// DRAWER (igual que Admin, oscuro y elegante)
+// -----------------------------------------------------------------
 @Composable
-fun DashboardScreen() {
+fun SuperAdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .fillMaxHeight()
+            .width(280.dp)
+            .background(Color(0xFF121212))
+            .padding(16.dp)
     ) {
         Text(
-            text = "Panel de Control",
-            style = MaterialTheme.typography.headlineMedium
+            "Super Administrador",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
         )
+        Spacer(modifier = Modifier.height(32.dp))
 
-        // Cards de estadísticas
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            DashboardCard(
-                title = "Instituciones",
-                value = "12",
-                icon = Icons.Default.AccountBalance,
-                modifier = Modifier.weight(1f)
-            )
-            DashboardCard(
-                title = "Usuarios",
-                value = "248",
-                icon = Icons.Default.People,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        DrawerItem("Dashboard", Icons.Default.Dashboard, onItemClick)
+        DrawerItem("Instituciones", Icons.Default.AccountBalance, onItemClick)
+        DrawerItem("Usuarios Globales", Icons.Default.People, onItemClick)
+        DrawerItem("Reportes", Icons.Default.Assessment, onItemClick)
+        DrawerItem("Configuración", Icons.Default.Settings, onItemClick)
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            DashboardCard(
-                title = "Admins",
-                value = "24",
-                icon = Icons.Default.AdminPanelSettings,
-                modifier = Modifier.weight(1f)
-            )
-            DashboardCard(
-                title = "Activos",
-                value = "189",
-                icon = Icons.Default.CheckCircle,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        Spacer(modifier = Modifier.height(40.dp))
+        Divider(color = Color.Gray.copy(alpha = 0.3f))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Acciones Rápidas",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = { /* TODO */ },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Nueva Institución")
-                }
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = { /* TODO */ },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.PersonAdd, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Nuevo Usuario")
-                }
+        DrawerItem(
+            title = "Cerrar Sesión",
+            icon = Icons.Default.Logout,
+            onClick = onLogout,
+            textColor = Color(0xFFE57373),
+            iconTint = Color(0xFFE57373)
+        )
+    }
+}
+
+@Composable
+fun DrawerItem(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    textColor: Color = Color.White,
+    iconTint: Color = Color.Gray
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(title, fontSize = 16.sp, color = textColor, fontWeight = FontWeight.Medium)
+    }
+}
+
+// -----------------------------------------------------------------
+// TOP BAR
+// -----------------------------------------------------------------
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SuperAdminTopBar(onMenuClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Panel Super Admin", fontWeight = FontWeight.SemiBold) },
+        navigationIcon = {
+            IconButton(onClick = onMenuClick) {
+                Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.Gray)
             }
+        },
+        actions = {
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+            }
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Person, contentDescription = "Perfil")
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+    )
+}
+
+// -----------------------------------------------------------------
+// BOTTOM BAR (opcional, puedes quitar si prefieres solo drawer)
+// -----------------------------------------------------------------
+@Composable
+private fun SuperAdminBottomBar() {
+    BottomAppBar(containerColor = Color.White, modifier = Modifier.height(56.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            BottomIcon("dashboard", "dashboard", {}, Icons.Default.Dashboard)
+            BottomIcon("instituciones", "instituciones", {}, Icons.Default.AccountBalance)
+            BottomIcon("config", "config", {}, Icons.Default.Settings)
         }
     }
 }
 
 @Composable
-fun DashboardCard(
+private fun BottomIcon(
+    item: String,
+    selected: String,
+    onClick: (String) -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    IconButton(onClick = { onClick(item) }) {
+        Icon(
+            imageVector = icon,
+            contentDescription = item,
+            tint = if (selected == item) Color(0xFF2196F3) else Color.Gray,
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+// -----------------------------------------------------------------
+// HEADER
+// -----------------------------------------------------------------
+@Composable
+private fun SuperAdminHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("MatriTech", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text("Panel Super Administrador", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFFE91E63)) {
+            Text(
+                "SUPER ADMIN",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+// -----------------------------------------------------------------
+// ESTADÍSTICAS
+// -----------------------------------------------------------------
+@Composable
+private fun SuperAdminStatisticsSection() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard("INSTITUCIONES", "12", Icons.Default.AccountBalance, Color(0xFFE91E63))
+            StatCard("USUARIOS TOTALES", "2.480", Icons.Default.People, Color(0xFF9C27B0))
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard("ADMINISTRADORES", "48", Icons.Default.AdminPanelSettings, Color(0xFF673AB7))
+            StatCard("ACTIVAS", "11", Icons.Default.CheckCircle, Color(0xFF4CAF50))
+        }
+    }
+}
+
+@Composable
+private fun StatCard(
     title: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
+    iconColor: Color
 ) {
-    Card(modifier = modifier) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineMedium
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-// Placeholders para las demás pantallas
-@Composable
-fun UsuariosPlaceholderScreen() {
-    PlaceholderScreen("Usuarios", "CRUD de usuarios próximamente")
-}
-
-@Composable
-fun ReportesPlaceholderScreen() {
-    PlaceholderScreen("Reportes", "Reportes y estadísticas próximamente")
-}
-
-@Composable
-fun ConfiguracionPlaceholderScreen() {
-    PlaceholderScreen("Configuración", "Configuración del sistema próximamente")
-}
-
-@Composable
-fun PlaceholderScreen(title: String, message: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = androidx.compose.ui.Alignment.Center
+    Card(
+        modifier = Modifier.height(130.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                Icons.Default.Construction,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Surface(shape = CircleShape, color = iconColor.copy(alpha = 0.1f), modifier = Modifier.size(44.dp)) {
+                Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.padding(10.dp))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(title, fontSize = 11.sp, color = Color.Black.copy(alpha = 0.7f))
         }
     }
 }
 
-private fun getCurrentTitle(route: String): String {
-    return when (route) {
-        SuperAdminRoute.Dashboard.route -> "Dashboard"
-        SuperAdminRoute.Instituciones.route -> "Instituciones"
-        SuperAdminRoute.Usuarios.route -> "Usuarios"
-        SuperAdminRoute.Reportes.route -> "Reportes"
-        SuperAdminRoute.Configuracion.route -> "Configuración"
-        else -> "Super Admin"
+// -----------------------------------------------------------------
+// ACCIONES RÁPIDAS
+// -----------------------------------------------------------------
+@Composable
+private fun SuperAdminQuickActions() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Text("Acciones Rápidas", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard("Nueva Institución", Icons.Default.AddBusiness, Color(0xFFE91E63))
+            QuickActionCard("Crear Admin", Icons.Default.PersonAdd, Color.White, textColor = Color.Black)
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard("Ver Logs", Icons.Default.ReceiptLong, Color.White, textColor = Color.Black)
+            QuickActionCard("Backup DB", Icons.Default.CloudDownload, Color(0xFF00BCD4))
+        }
     }
+}
+
+@Composable
+private fun QuickActionCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    backgroundColor: Color,
+    textColor: Color = Color.White
+) {
+    Card(
+        modifier = Modifier.height(100.dp).clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = if (backgroundColor == Color.White) Color(0xFF2196F3) else Color.White, modifier = Modifier.size(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = textColor)
+        }
+    }
+}
+
+// -----------------------------------------------------------------
+// PREVIEW
+// -----------------------------------------------------------------
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun SuperAdminScreenPreview() {
+    SuperAdminScreen()
 }
