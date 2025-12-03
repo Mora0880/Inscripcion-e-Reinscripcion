@@ -3,7 +3,7 @@ package com.mora.matritech
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -16,10 +16,11 @@ import com.mora.matritech.screens.coordinator.CoordinatorScreen
 import com.mora.matritech.screens.coordinator.CoordinatorViewModel
 import com.mora.matritech.screens.representante.RepresentanteScreen
 import com.mora.matritech.screens.student.StudentScreen
+import com.mora.matritech.screens.superadmin.SuperAdminScreen
 import com.mora.matritech.screens.teaching.TeacherScreen
 import com.mora.matritech.screens.teaching.TeacherViewModel
-import com.mora.matritech.ui.theme.NavRoutes
 import com.mora.matritech.ui.theme.MatriTechTheme
+import com.mora.matritech.ui.theme.NavRoutes
 import com.mora.matritech.ui.theme.login.LoginScreen
 import com.mora.matritech.ui.theme.login.LoginViewModel
 import com.mora.matritech.ui.theme.login.LoginViewModelFactory
@@ -41,50 +42,43 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
-    NavHost(
-        navController = navController,
-        startDestination = NavRoutes.Splash.route
-    ) {
-        composable(NavRoutes.Splash.route) {
-            SplashScreen(navController)
+    // Determinar destino inicial
+    val startDestination by produceState(initialValue = NavRoutes.Splash.route) {
+        val role = sessionManager.getUserRole()
+        value = when (role) {
+            "admin" -> NavRoutes.Admin.route
+            "superadmin" -> NavRoutes.SuperAdmin.route
+            "representante" -> NavRoutes.Representante.route
+            "estudiante" -> NavRoutes.Student.route
+            "docente" -> NavRoutes.Teacher.route
+            "coordinador" -> NavRoutes.Coordinator.route
+            else -> NavRoutes.Splash.route
         }
+    }
 
-        composable(NavRoutes.Register.route) {
-            RegisterScreen(navController)
-        }
-
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable(NavRoutes.Splash.route) { SplashScreen(navController) }
         composable(NavRoutes.Login.route) {
-            val authRepository = AuthRepository()
-            val sessionManager = SessionManager(context)
-
-            val loginViewModel: LoginViewModel = viewModel(
-                factory = LoginViewModelFactory(authRepository, sessionManager)
+            val viewModel: LoginViewModel = viewModel(
+                factory = LoginViewModelFactory(AuthRepository(), sessionManager)
             )
-
-            LoginScreen(navController, loginViewModel)
+            LoginScreen(navController, viewModel)
         }
+        composable(NavRoutes.Register.route) { RegisterScreen(navController) }
 
-        composable(NavRoutes.Admin.route) {
-            AdminScreen(navController)  // ✅ Agregado navController
-        }
-
-        composable(NavRoutes.Coordinator.route) {
-            val coordinatorViewModel: CoordinatorViewModel = viewModel()
-            CoordinatorScreen(coordinatorViewModel, navController)  // ✅ Agregado navController
-        }
-
-        composable(NavRoutes.Student.route) {
-            StudentScreen(navController)  // ✅ Agregado navController
-        }
-
+        composable(NavRoutes.Admin.route) { AdminScreen(navController) }
+        composable(NavRoutes.SuperAdmin.route) { SuperAdminScreen(navController) }
+        composable(NavRoutes.Representante.route) { RepresentanteScreen(navController) }
+        composable(NavRoutes.Student.route) { StudentScreen(navController) }
         composable(NavRoutes.Teacher.route) {
-            val teacherViewModel: TeacherViewModel = viewModel()
-            TeacherScreen(teacherViewModel, navController)  // ✅ Agregado navController - CORREGIDO
+            val vm: TeacherViewModel = viewModel()
+            TeacherScreen(vm, navController)
         }
-
-        composable(NavRoutes.Representante.route) {
-            RepresentanteScreen(navController)  // ✅ Agregado navController
+        composable(NavRoutes.Coordinator.route) {
+            val vm: CoordinatorViewModel = viewModel()
+            CoordinatorScreen(vm, navController)
         }
     }
 }

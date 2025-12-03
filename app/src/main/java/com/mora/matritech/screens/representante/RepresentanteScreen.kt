@@ -323,13 +323,3 @@ private fun QuickActionCard(
         }
     }
 }
-
-// -----------------------------------------------------------------
-// PREVIEW
-// -----------------------------------------------------------------
-
-// @androidx.compose.ui.tooling.preview.Preview(showBackground = true, showSystemUi = true)
-// @Composable
-// fun RepresentanteScreenPreview() {
-   //  RepresentanteScreen(navController = androidx.navigation.compose.rememberNavController())
-// }

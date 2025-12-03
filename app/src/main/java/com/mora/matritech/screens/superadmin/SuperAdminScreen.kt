@@ -1,4 +1,4 @@
-package com.mora.matritech.screens.admin
+package com.mora.matritech.screens.superadmin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,10 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.mora.matritech.data.local.SessionManager
@@ -27,33 +25,23 @@ import com.mora.matritech.ui.theme.NavRoutes
 import kotlinx.coroutines.launch
 
 // -----------------------------------------------------------------
-// PANTALLA PRINCIPAL - CON CIERRE DE SESIÓN FUNCIONAL
+// PANTALLA PRINCIPAL SUPER ADMIN (mismo estilo que Admin)
 // -----------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminScreen(
-    navController: NavHostController,
-    viewModel: AdminViewModel = viewModel()  // ← Ya existe en otro archivo
+fun SuperAdminScreen(
+    navController: NavHostController = rememberNavController()
 ) {
-    val uiState by viewModel.uiState
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
-    // Sincronizar drawer con ViewModel
-    LaunchedEffect(uiState.isDrawerOpen) {
-        if (uiState.isDrawerOpen) drawerState.open() else drawerState.close()
-    }
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            AdminDrawerContent(
-                onItemClick = {
-                    scope.launch { drawerState.close() }
-                    viewModel.closeDrawer()
-                },
+            SuperAdminDrawerContent(
+                onItemClick = { scope.launch { drawerState.close() } },
                 onLogout = {
                     sessionManager.logout()
                     navController.navigate(NavRoutes.Login.route) {
@@ -66,13 +54,12 @@ fun AdminScreen(
         content = {
             Scaffold(
                 topBar = {
-                    AdminTopBar(onMenuClick = { viewModel.openDrawer() })
+                    SuperAdminTopBar(
+                        onMenuClick = { scope.launch { drawerState.open() } }
+                    )
                 },
                 bottomBar = {
-                    AdminBottomBar(
-                        selectedItem = uiState.selectedBottomItem,
-                        onItemSelected = viewModel::onBottomItemSelected
-                    )
+                    SuperAdminBottomBar()
                 }
             ) { padding ->
                 Column(
@@ -83,11 +70,11 @@ fun AdminScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AdminHeader()
+                    SuperAdminHeader()
                     Spacer(modifier = Modifier.height(24.dp))
-                    StatisticsSection(stats = uiState.stats)
+                    SuperAdminStatisticsSection()
                     Spacer(modifier = Modifier.height(32.dp))
-                    QuickActionsSection()
+                    SuperAdminQuickActions()
                     Spacer(modifier = Modifier.height(40.dp))
                 }
             }
@@ -96,10 +83,10 @@ fun AdminScreen(
 }
 
 // -----------------------------------------------------------------
-// DRAWER CON CIERRE DE SESIÓN FUNCIONAL
+// DRAWER (igual que Admin, oscuro y elegante)
 // -----------------------------------------------------------------
 @Composable
-fun AdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
+fun SuperAdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -108,7 +95,7 @@ fun AdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
             .padding(16.dp)
     ) {
         Text(
-            "Menú Administrador",
+            "Super Administrador",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -116,13 +103,12 @@ fun AdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
         Spacer(modifier = Modifier.height(32.dp))
 
         DrawerItem("Dashboard", Icons.Default.Dashboard, onItemClick)
-        DrawerItem("Usuarios", Icons.Default.People, onItemClick)
+        DrawerItem("Instituciones", Icons.Default.AccountBalance, onItemClick)
+        DrawerItem("Usuarios Globales", Icons.Default.People, onItemClick)
         DrawerItem("Reportes", Icons.Default.Assessment, onItemClick)
         DrawerItem("Configuración", Icons.Default.Settings, onItemClick)
-        DrawerItem("Notificaciones", Icons.Default.Notifications, onItemClick)
 
         Spacer(modifier = Modifier.height(40.dp))
-
         Divider(color = Color.Gray.copy(alpha = 0.3f))
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -162,12 +148,12 @@ fun DrawerItem(
 // -----------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AdminTopBar(onMenuClick: () -> Unit) {
+private fun SuperAdminTopBar(onMenuClick: () -> Unit) {
     TopAppBar(
-        title = { Text("Panel de Administración", fontWeight = FontWeight.SemiBold) },
+        title = { Text("Panel Super Admin", fontWeight = FontWeight.SemiBold) },
         navigationIcon = {
             IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Abrir menú", tint = Color.Gray)
+                Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.Gray)
             }
         },
         actions = {
@@ -183,21 +169,20 @@ private fun AdminTopBar(onMenuClick: () -> Unit) {
 }
 
 // -----------------------------------------------------------------
-// BOTTOM BAR
+// BOTTOM BAR (opcional, puedes quitar si prefieres solo drawer)
 // -----------------------------------------------------------------
 @Composable
-private fun AdminBottomBar(selectedItem: String, onItemSelected: (String) -> Unit) {
+private fun SuperAdminBottomBar() {
     BottomAppBar(containerColor = Color.White, modifier = Modifier.height(56.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            BottomIcon("home", selectedItem, onItemSelected, Icons.Default.Home)
-            BottomIcon("users", selectedItem, onItemSelected, Icons.Default.People)
-            BottomIcon("reports", selectedItem, onItemSelected, Icons.Default.Assessment)
+            BottomIcon("dashboard", "dashboard", {}, Icons.Default.Dashboard)
+            BottomIcon("instituciones", "instituciones", {}, Icons.Default.AccountBalance)
+            BottomIcon("config", "config", {}, Icons.Default.Settings)
         }
     }
 }
@@ -220,10 +205,10 @@ private fun BottomIcon(
 }
 
 // -----------------------------------------------------------------
-// HEADER, ESTADÍSTICAS Y ACCIONES (sin cambios)
+// HEADER
 // -----------------------------------------------------------------
 @Composable
-private fun AdminHeader() {
+private fun SuperAdminHeader() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,11 +218,11 @@ private fun AdminHeader() {
     ) {
         Text("MatriTech", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("Panel de Administración", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Panel Super Administrador", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFF6B7EFF)) {
+        Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFFE91E63)) {
             Text(
-                "ADMINISTRADOR",
+                "SUPER ADMIN",
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 color = Color.White,
                 fontSize = 11.sp,
@@ -247,17 +232,20 @@ private fun AdminHeader() {
     }
 }
 
+// -----------------------------------------------------------------
+// ESTADÍSTICAS
+// -----------------------------------------------------------------
 @Composable
-private fun StatisticsSection(stats: AdminStats) {
+private fun SuperAdminStatisticsSection() {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("TOTAL USUARIOS", stats.totalUsers.toString(), Icons.Default.People, Color(0xFF6B7EFF))
-            StatCard("ESTUDIANTES", stats.students.toString(), Icons.Default.School, Color(0xFF4CAF50))
+            StatCard("INSTITUCIONES", "12", Icons.Default.AccountBalance, Color(0xFFE91E63))
+            StatCard("USUARIOS TOTALES", "2.480", Icons.Default.People, Color(0xFF9C27B0))
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("DOCENTES", stats.teachers.toString(), Icons.Default.Person, Color(0xFFFF9800))
-            StatCard("ADMINISTRADORES", stats.admins.toString(), Icons.Default.AdminPanelSettings, Color(0xFFF44336))
+            StatCard("ADMINISTRADORES", "48", Icons.Default.AdminPanelSettings, Color(0xFF673AB7))
+            StatCard("ACTIVAS", "11", Icons.Default.CheckCircle, Color(0xFF4CAF50))
         }
     }
 }
@@ -291,20 +279,23 @@ private fun StatCard(
     }
 }
 
+// -----------------------------------------------------------------
+// ACCIONES RÁPIDAS
+// -----------------------------------------------------------------
 @Composable
-private fun QuickActionsSection() {
+private fun SuperAdminQuickActions() {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Text("Acciones Rápidas", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard("Agregar Usuario", Icons.Default.PersonAdd, Color(0xFF2196F3))
-            QuickActionCard("Exportar Datos", Icons.Default.Download, Color.White, textColor = Color.Black)
+            QuickActionCard("Nueva Institución", Icons.Default.AddBusiness, Color(0xFFE91E63))
+            QuickActionCard("Crear Admin", Icons.Default.PersonAdd, Color.White, textColor = Color.Black)
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard("Ver Reportes", Icons.Default.Assessment, Color.White, textColor = Color.Black)
-            QuickActionCard("Configuración", Icons.Default.Settings, Color.White, textColor = Color.Black)
+            QuickActionCard("Ver Logs", Icons.Default.ReceiptLong, Color.White, textColor = Color.Black)
+            QuickActionCard("Backup DB", Icons.Default.CloudDownload, Color(0xFF00BCD4))
         }
     }
 }
@@ -317,9 +308,7 @@ private fun QuickActionCard(
     textColor: Color = Color.White
 ) {
     Card(
-        modifier = Modifier
-            .height(100.dp)
-            .clickable { },
+        modifier = Modifier.height(100.dp).clickable { },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -329,12 +318,7 @@ private fun QuickActionCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = if (backgroundColor == Color.White) Color(0xFF2196F3) else Color.White,
-                modifier = Modifier.size(32.dp)
-            )
+            Icon(icon, contentDescription = null, tint = if (backgroundColor == Color.White) Color(0xFF2196F3) else Color.White, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.height(8.dp))
             Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = textColor)
         }
@@ -344,8 +328,8 @@ private fun QuickActionCard(
 // -----------------------------------------------------------------
 // PREVIEW
 // -----------------------------------------------------------------
-@Preview(showBackground = true, showSystemUi = true)
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun AdminScreenPreview() {
-    AdminScreen(navController = rememberNavController())
+fun SuperAdminScreenPreview() {
+    SuperAdminScreen()
 }

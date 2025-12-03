@@ -29,10 +29,11 @@ fun LogoImage() {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    viewModel: LoginViewModel  // ✅ Recibe el ViewModel como parámetro
+    viewModel: LoginViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -40,10 +41,11 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // ⭐ Redirección automática según el rol
-    LaunchedEffect(uiState.isLoggedIn, uiState.userRole) {
+    // REDIRECCIÓN CORRECTA Y SEGURA
+    LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn && uiState.userRole != null) {
             val route = when (uiState.userRole) {
+                UserRole.SUPER_ADMIN -> NavRoutes.SuperAdmin.route
                 UserRole.ADMIN -> NavRoutes.Admin.route
                 UserRole.COORDINATOR -> NavRoutes.Coordinator.route
                 UserRole.STUDENT -> NavRoutes.Student.route
@@ -52,14 +54,15 @@ fun LoginScreen(
                 else -> return@LaunchedEffect
             }
 
+            // CLAVE: Limpiar TODA la pila (Splash + Login)
             navController.navigate(route) {
-                popUpTo(NavRoutes.Login.route) { inclusive = true }
+                popUpTo(0) { inclusive = true }  // Elimina TODO
                 launchSingleTop = true
             }
         }
     }
 
-    // ⭐ Mostrar errores en Snackbar
+    // Mostrar errores
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -79,7 +82,6 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             LogoImage()
-
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
@@ -128,10 +130,8 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("¿No tienes cuenta?")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("¿No tienes cuenta? ")
                 TextButton(
                     onClick = { navController.navigate(NavRoutes.Register.route) },
                     enabled = !uiState.isLoading
