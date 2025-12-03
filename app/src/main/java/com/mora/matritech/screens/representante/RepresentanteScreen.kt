@@ -32,7 +32,6 @@ fun RepresentanteScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -328,6 +327,7 @@ private fun QuickActionCard(
 // -----------------------------------------------------------------
 // PREVIEW
 // -----------------------------------------------------------------
+
 // @androidx.compose.ui.tooling.preview.Preview(showBackground = true, showSystemUi = true)
 // @Composable
 // fun RepresentanteScreenPreview() {
