@@ -28,6 +28,87 @@ import com.mora.matritech.data.local.SessionManager
 import com.mora.matritech.ui.theme.MatriTechTheme
 import com.mora.matritech.ui.theme.NavRoutes
 
+// -----------------------------------------------------------------
+// BOTTOM BAR
+// -----------------------------------------------------------------
+@Composable
+private fun StudentBottomBar() {
+    BottomAppBar(containerColor = Color.White, modifier = Modifier.height(56.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            BottomIcon("inicio", "inicio", {}, Icons.Filled.Home)
+            BottomIcon("notas", "notas", {}, Icons.Filled.Grade)
+            BottomIcon("horario", "horario", {}, Icons.Filled.Schedule)
+        }
+    }
+}
+
+@Composable
+private fun BottomIcon(
+    item: String,
+    selected: String,
+    onClick: (String) -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    IconButton(onClick = { onClick(item) }) {
+        Icon(
+            imageVector = icon,
+            contentDescription = item,
+            tint = if (selected == item) Color(0xFF00ACC1) else Color.Gray,
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+// -----------------------------------------------------------------
+// HEADER
+// -----------------------------------------------------------------
+@Composable
+private fun StudentHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("MatriTech", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text("Panel del Estudiante", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFF00ACC1)) {
+            Text(
+                "ESTUDIANTE",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+// -----------------------------------------------------------------
+// ESTADÍSTICAS
+// -----------------------------------------------------------------
+@Composable
+private fun StudentStatisticsSection() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard("PROMEDIO GENERAL", "8.7", Icons.Filled.Star, Color(0xFF00ACC1))
+            StatCard("ASISTENCIA", "94%", Icons.Filled.HowToReg, Color(0xFF26A69A))
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard("MATERIAS", "8", Icons.Filled.Book, Color(0xFF0097A7))
+            StatCard("FALTAS", "3", Icons.Filled.Warning, Color(0xFFFF9800))
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
