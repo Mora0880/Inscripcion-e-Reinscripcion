@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,7 @@ fun TeacherScreen(
 }
 
 // -----------------------------------------------------------------
-// DRAWER (igual que todos)
+// DRAWER
 // -----------------------------------------------------------------
 @Composable
 fun TeacherDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
@@ -105,7 +106,7 @@ fun TeacherDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
         DrawerItem("Horarios", Icons.Filled.Schedule, onItemClick)
 
         Spacer(modifier = Modifier.height(40.dp))
-        Divider(color = Color.Gray.copy(alpha = 0.3f))
+        HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
         Spacer(modifier = Modifier.height(16.dp))
 
         DrawerItem(
@@ -121,7 +122,7 @@ fun TeacherDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
 @Composable
 fun DrawerItem(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     onClick: () -> Unit,
     textColor: Color = Color.White,
     iconTint: Color = Color.Gray
@@ -188,7 +189,7 @@ private fun BottomIcon(
     item: String,
     selected: String,
     onClick: (String) -> Unit,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: ImageVector
 ) {
     IconButton(onClick = { onClick(item) }) {
         Icon(
@@ -235,13 +236,37 @@ private fun TeacherHeader() {
 private fun TeacherStatisticsSection() {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("CLASES ASIGNADAS", "6", Icons.Filled.Class, Color(0xFFFF9800))
-            StatCard("ESTUDIANTES", "184", Icons.Filled.School, Color(0xFFFF7043))
+            StatCard(
+                title = "CLASES ASIGNADAS",
+                value = "6",
+                icon = Icons.Filled.Class,
+                iconColor = Color(0xFFFF9800),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                title = "ESTUDIANTES",
+                value = "184",
+                icon = Icons.Filled.School,
+                iconColor = Color(0xFFFF7043),
+                modifier = Modifier.weight(1f)
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("PENDIENTES", "12", Icons.Filled.Warning, Color(0xFFF44336))
-            StatCard("HOY", "4 Clases", Icons.Filled.Today, Color(0xFF2196F3))
+            StatCard(
+                title = "PENDIENTES",
+                value = "12",
+                icon = Icons.Filled.Warning,
+                iconColor = Color(0xFFF44336),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                title = "HOY",
+                value = "4 Clases",
+                icon = Icons.Filled.Today,
+                iconColor = Color(0xFF2196F3),
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -250,11 +275,12 @@ private fun TeacherStatisticsSection() {
 private fun StatCard(
     title: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconColor: Color
+    icon: ImageVector,
+    iconColor: Color,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.height(130.dp),
+        modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -271,6 +297,108 @@ private fun StatCard(
             Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
             Text(title, fontSize = 11.sp, color = Color.Black.copy(alpha = 0.7f))
+        }
+    }
+}
+
+// -----------------------------------------------------------------
+// QUICK ACTIONS
+// -----------------------------------------------------------------
+@Composable
+private fun TeacherQuickActions() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Text(
+            text = "Acciones Rápidas",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionCard(
+                title = "Tomar Asistencia",
+                icon = Icons.Filled.HowToReg,
+                color = Color(0xFF4CAF50),
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                title = "Registrar Notas",
+                icon = Icons.Filled.Edit,
+                color = Color(0xFF2196F3),
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionCard(
+                title = "Ver Horario",
+                icon = Icons.Filled.CalendarToday,
+                color = Color(0xFFFF9800),
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                title = "Materiales",
+                icon = Icons.Filled.Folder,
+                color = Color(0xFF9C27B0),
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QuickActionCard(
+    title: String,
+    icon: ImageVector,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(100.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }

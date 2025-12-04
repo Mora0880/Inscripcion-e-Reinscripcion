@@ -34,21 +34,23 @@ class LoginViewModel(
             when (val result = authRepository.signIn(email, password)) {
                 is AuthResult.Success -> {
                     val user = result.user
-
                     val roleId = user?.rol_id
-                    val userRole = when (roleId) {
-                        1 -> UserRole.ADMIN
-                        2 -> UserRole.COORDINATOR
-                        3 -> UserRole.STUDENT
-                        4 -> UserRole.TEACHER
-                        5 -> UserRole.REPRESENTANTE
-                        else -> null
+
+                    // Mapear rol_id a UserRole y string para guardar en sesión
+                    val (userRole, roleString) = when (roleId) {
+                        0 -> UserRole.SUPER_ADMIN to "superadmin"
+                        1 -> UserRole.ADMIN to "admin"
+                        2 -> UserRole.COORDINATOR to "coordinador"
+                        3 -> UserRole.STUDENT to "estudiante"
+                        4 -> UserRole.TEACHER to "docente"
+                        5 -> UserRole.REPRESENTANTE to "representante"
+                        else -> null to ""
                     }
 
-                    // ✅ GUARDAR SESIÓN usando tu SessionManager
+                    // Guardar sesión con el rol en minúsculas
                     sessionManager.saveSession(
                         userId = user?.id,
-                        role = userRole?.name ?: ""
+                        role = roleString
                     )
 
                     _uiState.value = LoginUiState(
@@ -66,7 +68,9 @@ class LoginViewModel(
                     )
                 }
 
-                AuthResult.Loading -> TODO()
+                AuthResult.Loading -> {
+                    _uiState.value = LoginUiState(isLoading = true)
+                }
             }
         }
     }
