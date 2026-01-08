@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 // Modelo para la tabla usuarios
 @Serializable
@@ -62,8 +63,8 @@ class AuthRepository {
 
                 // ASÍ SE HACE AHORA (2025)
                 data = buildJsonObject {
-                    put("nombre", JsonPrimitive(nombre))
-                    put("rol_id", JsonPrimitive(roleId.toString()))
+                    put("nombre", nombre)
+                    put("rol_id", roleId)
                 }
             }
 
