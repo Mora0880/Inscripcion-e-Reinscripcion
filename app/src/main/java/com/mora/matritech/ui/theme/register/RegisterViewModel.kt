@@ -77,7 +77,7 @@ class RegisterViewModel : ViewModel() {
             }
 
             // ← NUEVA VALIDACIÓN
-            if (roleId !in 1..5) {
+            if (roleId !in 0..5) {
                 println("❌ Rol inválido")
                 _uiState.value = RegisterUiState(
                     errorMessage = "Debes seleccionar un rol válido"
