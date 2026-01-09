@@ -16,24 +16,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.mora.matritech.data.local.SessionManager
 import com.mora.matritech.ui.theme.NavRoutes
 import kotlinx.coroutines.launch
 
 // -----------------------------------------------------------------
-// PANTALLA PRINCIPAL - CON CIERRE DE SESIÓN FUNCIONAL
+// PANTALLA PRINCIPAL - CON NAVEGACIÓN AL CRUD
 // -----------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(
     navController: NavHostController,
-    viewModel: AdminViewModel = viewModel()  // ← Ya existe en otro archivo
+    viewModel: AdminViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -50,9 +48,17 @@ fun AdminScreen(
         drawerState = drawerState,
         drawerContent = {
             AdminDrawerContent(
-                onItemClick = {
+                onItemClick = { item ->
                     scope.launch { drawerState.close() }
                     viewModel.closeDrawer()
+
+                    // Navegar según el item
+                    when (item) {
+                        "usuarios" -> navController.navigate("admin/users")
+                        "dashboard" -> navController.navigate("admin/dashboard")
+                        "reportes" -> navController.navigate("admin/reports")
+                        "configuracion" -> navController.navigate("admin/settings")
+                    }
                 },
                 onLogout = {
                     sessionManager.logout()
@@ -71,7 +77,13 @@ fun AdminScreen(
                 bottomBar = {
                     AdminBottomBar(
                         selectedItem = uiState.selectedBottomItem,
-                        onItemSelected = viewModel::onBottomItemSelected
+                        onItemSelected = { item ->
+                            viewModel.onBottomItemSelected(item)
+                            when (item) {
+                                "users" -> navController.navigate("admin/users")
+                                "reports" -> navController.navigate("admin/reports")
+                            }
+                        }
                     )
                 }
             ) { padding ->
@@ -87,7 +99,11 @@ fun AdminScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     StatisticsSection(stats = uiState.stats)
                     Spacer(modifier = Modifier.height(32.dp))
-                    QuickActionsSection()
+                    QuickActionsSection(
+                        onAddUser = { navController.navigate("admin/users/form") },
+                        onViewReports = { navController.navigate("admin/reports") },
+                        onViewSettings = { navController.navigate("admin/settings") }
+                    )
                     Spacer(modifier = Modifier.height(40.dp))
                 }
             }
@@ -96,10 +112,13 @@ fun AdminScreen(
 }
 
 // -----------------------------------------------------------------
-// DRAWER CON CIERRE DE SESIÓN FUNCIONAL
+// DRAWER CON NAVEGACIÓN
 // -----------------------------------------------------------------
 @Composable
-fun AdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
+fun AdminDrawerContent(
+    onItemClick: (String) -> Unit,
+    onLogout: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -115,11 +134,35 @@ fun AdminDrawerContent(onItemClick: () -> Unit, onLogout: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(32.dp))
 
-        DrawerItem("Dashboard", Icons.Default.Dashboard, onItemClick)
-        DrawerItem("Usuarios", Icons.Default.People, onItemClick)
-        DrawerItem("Reportes", Icons.Default.Assessment, onItemClick)
-        DrawerItem("Configuración", Icons.Default.Settings, onItemClick)
-        DrawerItem("Notificaciones", Icons.Default.Notifications, onItemClick)
+        DrawerItem(
+            title = "Dashboard",
+            icon = Icons.Default.Dashboard,
+            onClick = { onItemClick("dashboard") }
+        )
+
+        DrawerItem(
+            title = "Usuarios",
+            icon = Icons.Default.People,
+            onClick = { onItemClick("usuarios") }
+        )
+
+        DrawerItem(
+            title = "Reportes",
+            icon = Icons.Default.Assessment,
+            onClick = { onItemClick("reportes") }
+        )
+
+        DrawerItem(
+            title = "Configuración",
+            icon = Icons.Default.Settings,
+            onClick = { onItemClick("configuracion") }
+        )
+
+        DrawerItem(
+            title = "Notificaciones",
+            icon = Icons.Default.Notifications,
+            onClick = { onItemClick("notificaciones") }
+        )
 
         Spacer(modifier = Modifier.height(40.dp))
 
@@ -220,7 +263,7 @@ private fun BottomIcon(
 }
 
 // -----------------------------------------------------------------
-// HEADER, ESTADÍSTICAS Y ACCIONES (sin cambios)
+// HEADER
 // -----------------------------------------------------------------
 @Composable
 private fun AdminHeader() {
@@ -247,30 +290,55 @@ private fun AdminHeader() {
     }
 }
 
+// -----------------------------------------------------------------
+// ESTADÍSTICAS
+// -----------------------------------------------------------------
 @Composable
 private fun StatisticsSection(stats: AdminStats) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("TOTAL USUARIOS", stats.totalUsers.toString(), Icons.Default.People, Color(0xFF6B7EFF))
-            StatCard("ESTUDIANTES", stats.students.toString(), Icons.Default.School, Color(0xFF4CAF50))
+            StatCard(
+                title = "TOTAL USUARIOS",
+                value = stats.totalUsers.toString(),
+                icon = Icons.Default.People,
+                iconColor = Color(0xFF6B7EFF)
+            )
+            StatCard(
+                title = "ESTUDIANTES",
+                value = stats.students.toString(),
+                icon = Icons.Default.School,
+                iconColor = Color(0xFF4CAF50)
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("DOCENTES", stats.teachers.toString(), Icons.Default.Person, Color(0xFFFF9800))
-            StatCard("ADMINISTRADORES", stats.admins.toString(), Icons.Default.AdminPanelSettings, Color(0xFFF44336))
+            StatCard(
+                title = "DOCENTES",
+                value = stats.teachers.toString(),
+                icon = Icons.Default.Person,
+                iconColor = Color(0xFFFF9800)
+            )
+            StatCard(
+                title = "ADMINISTRADORES",
+                value = stats.admins.toString(),
+                icon = Icons.Default.AdminPanelSettings,
+                iconColor = Color(0xFFF44336)
+            )
         }
     }
 }
 
 @Composable
-private fun StatCard(
+private fun RowScope.StatCard(
     title: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconColor: Color
 ) {
     Card(
-        modifier = Modifier.height(130.dp),
+        modifier = Modifier
+            .weight(1f)
+            .height(130.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -291,35 +359,68 @@ private fun StatCard(
     }
 }
 
+// -----------------------------------------------------------------
+// ACCIONES RÁPIDAS CON NAVEGACIÓN
+// -----------------------------------------------------------------
 @Composable
-private fun QuickActionsSection() {
+private fun QuickActionsSection(
+    onAddUser: () -> Unit,
+    onViewReports: () -> Unit,
+    onViewSettings: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Text("Acciones Rápidas", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard("Agregar Usuario", Icons.Default.PersonAdd, Color(0xFF2196F3))
-            QuickActionCard("Exportar Datos", Icons.Default.Download, Color.White, textColor = Color.Black)
+            QuickActionCard(
+                title = "Agregar Usuario",
+                icon = Icons.Default.PersonAdd,
+                backgroundColor = Color(0xFF2196F3),
+                textColor = Color.White,
+                onClick = onAddUser
+            )
+            QuickActionCard(
+                title = "Exportar Datos",
+                icon = Icons.Default.Download,
+                backgroundColor = Color.White,
+                textColor = Color.Black,
+                onClick = { }
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard("Ver Reportes", Icons.Default.Assessment, Color.White, textColor = Color.Black)
-            QuickActionCard("Configuración", Icons.Default.Settings, Color.White, textColor = Color.Black)
+            QuickActionCard(
+                title = "Ver Reportes",
+                icon = Icons.Default.Assessment,
+                backgroundColor = Color.White,
+                textColor = Color.Black,
+                onClick = onViewReports
+            )
+            QuickActionCard(
+                title = "Configuración",
+                icon = Icons.Default.Settings,
+                backgroundColor = Color.White,
+                textColor = Color.Black,
+                onClick = onViewSettings
+            )
         }
     }
 }
 
 @Composable
-private fun QuickActionCard(
+private fun RowScope.QuickActionCard(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     backgroundColor: Color,
-    textColor: Color = Color.White
+    textColor: Color = Color.White,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
+            .weight(1f)
             .height(100.dp)
-            .clickable { },
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -339,13 +440,4 @@ private fun QuickActionCard(
             Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = textColor)
         }
     }
-}
-
-// -----------------------------------------------------------------
-// PREVIEW
-// -----------------------------------------------------------------
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun AdminScreenPreview() {
-    AdminScreen(navController = rememberNavController())
 }
