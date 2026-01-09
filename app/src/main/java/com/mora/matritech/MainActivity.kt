@@ -110,16 +110,35 @@ fun AppNavigation() {
         // ==================== CRUD DE USUARIOS (ADMIN) ====================
 
         // Lista de usuarios
+        // En MainActivity.kt, en la ruta de UserManagement:
         composable(NavRoutes.UserManagement.route) {
             val viewModel: UserViewModel = viewModel()
+            val context = LocalContext.current
+            val sessionManager = remember { SessionManager(context) }
+
+            // Obtener el rol del usuario actual
+            val currentUserRole = sessionManager.getUserRole() // Ejemplo: "admin" o "superadmin"
+            val currentUserRoleId = when (currentUserRole) {
+                "superadmin" -> 0
+                "admin" -> 1
+                "coordinador" -> 2
+                "estudiante" -> 3
+                "docente" -> 4
+                "representante" -> 5
+                else -> null
+            }
+
             UserManagementScreen(
                 viewModel = viewModel,
+                currentUserRoleId = currentUserRoleId, // ← NUEVO
                 onNavigateToForm = { userId ->
                     if (userId != null) {
-                        // Preparar el formulario para edición
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("userId", userId)
                         navController.navigate(NavRoutes.UserEdit.createRoute(userId))
                     } else {
-                        // Formulario para crear nuevo usuario
+                        viewModel.prepareCreateUser()
                         navController.navigate(NavRoutes.UserForm.route)
                     }
                 }

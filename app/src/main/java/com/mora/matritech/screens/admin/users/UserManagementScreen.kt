@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,10 +29,20 @@ import com.mora.matritech.screens.admin.users.components.UserFilterChip
 @Composable
 fun UserManagementScreen(
     viewModel: UserViewModel = viewModel(),
-    onNavigateToForm: (userId: String?) -> Unit
+    onNavigateToForm: (userId: String?) -> Unit,
+    currentUserRoleId: Int? = null // ← NUEVO: Rol del usuario actual
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Filtrar Super Admins si el usuario es Admin (no Super Admin)
+    val displayUsers = remember(uiState.filteredUsers, currentUserRoleId) {
+        if (currentUserRoleId == 1) { // Si es Admin normal (no Super Admin)
+            uiState.filteredUsers.filter { it.roleId != 0 } // Ocultar Super Admins
+        } else {
+            uiState.filteredUsers // Super Admin ve todo
+        }
+    }
 
     // Mostrar mensajes
     LaunchedEffect(uiState.error) {
@@ -65,25 +76,10 @@ fun UserManagementScreen(
                 .padding(padding)
                 .background(Color(0xFFF5F5F5))
         ) {
-            // Header con estadísticas
+            // Header compacto con estadísticas
             UserManagementHeader(stats = uiState.stats)
 
-            // Barra de búsqueda
-            SearchBar(
-                query = uiState.searchQuery,
-                onQueryChange = viewModel::searchUsers,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
-            // Filtros
-            FilterSection(
-                selectedRole = uiState.selectedRoleFilter,
-                showActiveOnly = uiState.showActiveOnly,
-                onRoleFilterChange = viewModel::filterByRole,
-                onToggleActive = viewModel::toggleActiveFilter
-            )
-
-            // Lista de usuarios
+            // Contenido principal
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -91,26 +87,55 @@ fun UserManagementScreen(
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (uiState.filteredUsers.isEmpty()) {
-                EmptyState()
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(uiState.filteredUsers, key = { it.id }) { user ->
-                        UserCard(
-                            user = user,
-                            onEdit = { onNavigateToForm(user.id) },
-                            onToggleActive = {
-                                if (user.activo) {
-                                    viewModel.deactivateUser(user.id)
-                                } else {
-                                    viewModel.activateUser(user.id)
-                                }
-                            }
+                    // Barra de búsqueda dentro de la lista
+                    item {
+                        SearchBar(
+                            query = uiState.searchQuery,
+                            onQueryChange = viewModel::searchUsers
                         )
+                    }
+
+                    // Filtros dentro de la lista
+                    item {
+                        FilterSection(
+                            selectedRole = uiState.selectedRoleFilter,
+                            showActiveOnly = uiState.showActiveOnly,
+                            onRoleFilterChange = viewModel::filterByRole,
+                            onToggleActive = viewModel::toggleActiveFilter,
+                            currentUserRoleId = currentUserRoleId
+                        )
+                    }
+
+                    // Lista de usuarios
+                    if (displayUsers.isEmpty()) {
+                        item {
+                            EmptyState()
+                        }
+                    } else {
+                        items(displayUsers, key = { it.id }) { user ->
+                            UserCard(
+                                user = user,
+                                onEdit = { onNavigateToForm(user.id) },
+                                onToggleActive = {
+                                    if (user.activo) {
+                                        viewModel.deactivateUser(user.id)
+                                    } else {
+                                        viewModel.activateUser(user.id)
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // Espaciado al final para el FAB
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
             }
@@ -118,30 +143,29 @@ fun UserManagementScreen(
     }
 }
 
-// ==================== HEADER ====================
+// ==================== HEADER COMPACTO ====================
 
 @Composable
 private fun UserManagementHeader(stats: com.mora.matritech.data.repository.UserStats?) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
-        shadowElevation = 2.dp
+        shadowElevation = 1.dp
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 "Gestión de Usuarios",
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
             stats?.let {
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     StatChip(
                         label = "Total",
@@ -168,22 +192,22 @@ private fun UserManagementHeader(stats: com.mora.matritech.data.repository.UserS
 private fun RowScope.StatChip(label: String, value: Int, color: Color) {
     Surface(
         modifier = Modifier.weight(1f),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = color.copy(alpha = 0.1f)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 value.toString(),
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = color
             )
             Text(
                 label,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 color = Color.Gray
             )
         }
@@ -195,8 +219,7 @@ private fun RowScope.StatChip(label: String, value: Int, color: Color) {
 @Composable
 private fun SearchBar(
     query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onQueryChange: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(query) }
 
@@ -206,10 +229,10 @@ private fun SearchBar(
             text = it
             onQueryChange(it)
         },
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         placeholder = { Text("Buscar por nombre o email...") },
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = null)
+            Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
         },
         trailingIcon = {
             if (text.isNotEmpty()) {
@@ -217,7 +240,7 @@ private fun SearchBar(
                     text = ""
                     onQueryChange("")
                 }) {
-                    Icon(Icons.Default.Close, contentDescription = "Limpiar")
+                    Icon(Icons.Default.Close, contentDescription = "Limpiar", tint = Color.Gray)
                 }
             }
         },
@@ -237,26 +260,28 @@ private fun FilterSection(
     selectedRole: Int?,
     showActiveOnly: Boolean,
     onRoleFilterChange: (Int?) -> Unit,
-    onToggleActive: () -> Unit
+    onToggleActive: () -> Unit,
+    currentUserRoleId: Int?
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(vertical = 8.dp)
     ) {
         Text(
             "Filtros",
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color.Gray
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Filtro por rol
-        Row(
+        // Filtro por rol (sin scroll horizontal, se ajusta automáticamente)
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             UserFilterChip(
                 label = "Todos",
@@ -264,12 +289,22 @@ private fun FilterSection(
                 onClick = { onRoleFilterChange(null) }
             )
 
+            // Filtrar roles según el usuario actual
             UserRole.values().forEach { role ->
-                UserFilterChip(
-                    label = role.displayName,
-                    selected = selectedRole == role.id,
-                    onClick = { onRoleFilterChange(role.id) }
-                )
+                // Si es Admin (roleId = 1), NO mostrar Super Admin (roleId = 0)
+                val shouldShow = if (currentUserRoleId == 1) {
+                    role.id != 0 // Ocultar Super Admin
+                } else {
+                    true // Super Admin ve todo
+                }
+
+                if (shouldShow) {
+                    UserFilterChip(
+                        label = role.displayName,
+                        selected = selectedRole == role.id,
+                        onClick = { onRoleFilterChange(role.id) }
+                    )
+                }
             }
         }
 
@@ -283,7 +318,7 @@ private fun FilterSection(
                 checked = showActiveOnly,
                 onCheckedChange = { onToggleActive() }
             )
-            Text("Solo usuarios activos")
+            Text("Solo usuarios activos", fontSize = 14.sp)
         }
     }
 }
@@ -293,7 +328,9 @@ private fun FilterSection(
 @Composable
 private fun EmptyState() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -302,15 +339,82 @@ private fun EmptyState() {
             Icon(
                 Icons.Default.People,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = Color.Gray
+                modifier = Modifier.size(56.dp),
+                tint = Color.Gray.copy(alpha = 0.5f)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 "No se encontraron usuarios",
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 color = Color.Gray
             )
         }
     }
+}
+
+// ==================== FLOWROW (Para wrapping de chips) ====================
+
+@Composable
+private fun FlowRow(
+    modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+        val sequences = mutableListOf<List<Placeable>>()
+        val currentSequence = mutableListOf<Placeable>()
+        var currentWidth = 0
+
+        measurables.forEach { measurable ->
+            val placeable = measurable.measure(constraints)
+
+            if (currentWidth + placeable.width > constraints.maxWidth) {
+                sequences.add(currentSequence.toList())
+                currentSequence.clear()
+                currentWidth = 0
+            }
+
+            currentSequence.add(placeable)
+            currentWidth += placeable.width + 6.dp.roundToPx()
+        }
+
+        if (currentSequence.isNotEmpty()) {
+            sequences.add(currentSequence.toList())
+        }
+
+        var yPosition = 0
+
+        layout(constraints.maxWidth, sequences.sumOf { row ->
+            row.maxOf { it.height } + 6.dp.roundToPx()
+        }) {
+            sequences.forEach { row ->
+                var xPosition = 0
+                val rowHeight = row.maxOf { it.height }
+
+                row.forEach { placeable ->
+                    placeable.placeRelative(x = xPosition, y = yPosition)
+                    xPosition += placeable.width + 6.dp.roundToPx()
+                }
+
+                yPosition += rowHeight + 6.dp.roundToPx()
+            }
+        }
+    }
+}
+
+@Composable
+private fun Layout(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+    measurePolicy: androidx.compose.ui.layout.MeasurePolicy
+) {
+    androidx.compose.ui.layout.Layout(
+        modifier = modifier,
+        content = content,
+        measurePolicy = measurePolicy
+    )
 }
