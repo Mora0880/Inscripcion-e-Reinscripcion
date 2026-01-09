@@ -32,6 +32,7 @@ fun UserFormScreen(
     onNavigateBack: () -> Unit
 ) {
     val formState by viewModel.formState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()  // ← Necesario para detectar successMessage
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Cargar datos si es edición
@@ -246,11 +247,9 @@ fun UserFormScreen(
         }
     }
 
-    // Navegar de vuelta al guardar exitosamente
-    LaunchedEffect(formState.isLoading) {
-        if (!formState.isLoading && formState.error == null &&
-            formState.nombre.isEmpty() && !formState.isEditing) {
-            // Se limpió el formulario = éxito
+    // ← CORRECCIÓN: Volver atrás solo cuando hay un mensaje de éxito
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
             onNavigateBack()
         }
     }
