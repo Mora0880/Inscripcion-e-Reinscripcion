@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.mora.matritech.data.local.SessionManager
 import com.mora.matritech.ui.theme.NavRoutes
@@ -41,11 +40,26 @@ import com.mora.matritech.ui.theme.NavRoutes
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentScreen(
-    navController: NavHostController,
-    viewModel: StudentViewModel = viewModel()
+    navController: NavHostController
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+
+    // Obtener userId de la sesión
+    val userId = sessionManager.getUserId() ?: run {
+        // Si no hay userId, redirigir al login
+        LaunchedEffect(Unit) {
+            navController.navigate(NavRoutes.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+        return
+    }
+
+    // Crear ViewModel con contexto y userId
+    val viewModel: StudentViewModel = remember {
+        StudentViewModel(context, userId)
+    }
 
     // Estados del ViewModel
     val currentStep by viewModel.currentStep.collectAsState()

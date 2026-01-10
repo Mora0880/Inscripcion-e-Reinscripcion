@@ -1,9 +1,12 @@
 package com.mora.matritech.screens.student
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mora.matritech.data.repository.EnrollmentRepository
+import com.mora.matritech.data.repository.EnrollmentResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +18,12 @@ import java.util.*
  * ViewModel para gestionar el panel del estudiante y la inscripción
  * Maneja tanto el dashboard como el formulario de inscripción en pasos
  */
-class StudentViewModel : ViewModel() {
+class StudentViewModel(
+    private val context: Context,
+    private val userId: String
+) : ViewModel() {
+
+    private val enrollmentRepository = EnrollmentRepository(context)
 
     // ========================================================================
     // ESTADO DEL DASHBOARD (Funcionalidad existente)
@@ -311,32 +319,61 @@ class StudentViewModel : ViewModel() {
 
     /**
      * Envía el formulario de inscripción
-     * STUB: En PASO 1 solo simula el envío
-     * TODO PASO 2: Implementar integración con Supabase
+     * Integra con Supabase: Database + Storage
      */
     fun submitEnrollment() {
         viewModelScope.launch {
             try {
                 _enrollmentUiState.value = EnrollmentUiState.Loading
 
-                // TODO PASO 2: Implementar la siguiente lógica:
-                // 1. Subir documentos a Supabase Storage
-                // 2. Insertar datos del estudiante en tabla 'estudiantes'
-                // 3. Crear registro en tabla 'inscripciones' con estado 'pendiente'
-                // 4. Enviar notificación a administradores
+                Log.d("StudentViewModel", "🚀 Iniciando envío de inscripción...")
 
-                // Simulación de proceso asíncrono
-                kotlinx.coroutines.delay(2000)
+                val data = _formData.value
 
-                _enrollmentUiState.value = EnrollmentUiState.Success(
-                    "¡Inscripción enviada exitosamente!\n\n" +
-                            "Tus datos serán revisados por un administrador. " +
-                            "Recibirás una notificación cuando tu inscripción sea aprobada."
+                // Validar que todos los datos estén completos
+                if (data.dniDocumento == null ||
+                    data.actaNacimiento == null ||
+                    data.certificadoAcademico == null) {
+                    throw Exception("Faltan documentos por cargar")
+                }
+
+                // Llamar al repository para crear la inscripción
+                val result = enrollmentRepository.createEnrollment(
+                    nombre = data.nombre,
+                    apellido = data.apellido,
+                    documentoIdentidad = data.documentoIdentidad,
+                    fechaNacimiento = data.fechaNacimiento,
+                    telefono = data.telefono,
+                    email = data.email,
+                    dniUri = data.dniDocumento!!,
+                    actaNacimientoUri = data.actaNacimiento!!,
+                    certificadoAcademicoUri = data.certificadoAcademico!!,
+                    userId = userId
                 )
 
+                when (result) {
+                    is EnrollmentResult.Success -> {
+                        Log.d("StudentViewModel", "✅ Inscripción exitosa: ${result.inscripcionId}")
+                        _enrollmentUiState.value = EnrollmentUiState.Success(
+                            "¡Inscripción enviada exitosamente!\n\n" +
+                                    "ID de inscripción: ${result.inscripcionId.take(8)}...\n\n" +
+                                    "Tus datos y documentos han sido guardados correctamente. " +
+                                    "Un administrador revisará tu solicitud y recibirás una notificación " +
+                                    "cuando tu inscripción sea aprobada."
+                        )
+                    }
+                    is EnrollmentResult.Error -> {
+                        Log.e("StudentViewModel", "❌ Error en inscripción: ${result.message}")
+                        _enrollmentUiState.value = EnrollmentUiState.Error(
+                            "Error al enviar la inscripción: ${result.message}"
+                        )
+                    }
+                }
+
             } catch (e: Exception) {
+                Log.e("StudentViewModel", "❌ Excepción en submitEnrollment: ${e.message}", e)
                 _enrollmentUiState.value = EnrollmentUiState.Error(
-                    "Error al enviar la inscripción: ${e.message}"
+                    "Error al enviar la inscripción: ${e.message ?: "Error desconocido"}"
                 )
             }
         }
