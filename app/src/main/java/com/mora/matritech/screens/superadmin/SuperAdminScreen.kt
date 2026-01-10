@@ -26,6 +26,9 @@ import com.mora.matritech.data.local.SessionManager
 import com.mora.matritech.data.remote.supabase
 import com.mora.matritech.data.repository.InstitucionRepository
 import com.mora.matritech.data.repository.InstitucionViewModelFactory
+import com.mora.matritech.data.repository.UserRepository
+import com.mora.matritech.ui.screens.superadmin.AdminScreenCR
+import com.mora.matritech.ui.screens.superadmin.AdminViewModelCR
 import com.mora.matritech.ui.theme.NavRoutes
 import kotlinx.coroutines.launch
 
@@ -59,6 +62,15 @@ fun SuperAdminScreen(
     val institucionViewModel: InstitucionViewModel = viewModel(
         factory = InstitucionViewModelFactory(institucionRepository)
     )
+
+    // ViewModel para el CRUD de Administradores
+    val userRepository = remember { UserRepository() }
+    val adminViewModel = remember {
+        AdminViewModelCR(
+            userRepository = userRepository,
+            institucionRepository = institucionRepository
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -102,7 +114,13 @@ fun SuperAdminScreen(
                         SuperAdminSection.INSTITUCIONES -> {
                             InstitucionesScreen(viewModel = institucionViewModel)
                         }
-                        SuperAdminSection.USUARIOS -> UsuariosContent()
+                        SuperAdminSection.USUARIOS -> {
+                            // ← AQUÍ SE MUESTRA EL CRUD DE ADMINISTRADORES
+                            AdminScreenCR(
+                                viewModel = adminViewModel,
+                                onBackClick = { currentSection = SuperAdminSection.DASHBOARD }
+                            )
+                        }
                         SuperAdminSection.REPORTES -> ReportesContent()
                         SuperAdminSection.CONFIGURACION -> ConfiguracionContent()
                     }
@@ -134,38 +152,6 @@ private fun DashboardContent() {
 }
 
 // Placeholders para las otras secciones
-@Composable
-private fun UsuariosContent() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                Icons.Default.People,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = Color(0xFF9C27B0)
-            )
-            Text(
-                "Sección de Usuarios",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "En desarrollo",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-        }
-    }
-}
-
 @Composable
 private fun ReportesContent() {
     Box(
@@ -279,7 +265,7 @@ fun SuperAdminDrawerContent(
         )
         DrawerItem(
             title = "Usuarios Globales",
-            icon = Icons.Default.People,
+            icon = Icons.Default.ManageAccounts,
             onClick = { onItemClick(SuperAdminSection.USUARIOS) },
             isSelected = currentSection == SuperAdminSection.USUARIOS
         )
@@ -350,7 +336,7 @@ private fun SuperAdminTopBar(
     val title = when (currentSection) {
         SuperAdminSection.DASHBOARD -> "Panel Super Admin"
         SuperAdminSection.INSTITUCIONES -> "Gestión de Instituciones"
-        SuperAdminSection.USUARIOS -> "Usuarios Globales"
+        SuperAdminSection.USUARIOS -> "Gestión de Administradores"
         SuperAdminSection.REPORTES -> "Reportes del Sistema"
         SuperAdminSection.CONFIGURACION -> "Configuración"
     }

@@ -13,6 +13,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mora.matritech.data.local.SessionManager
 import com.mora.matritech.data.repository.AuthRepository
+import com.mora.matritech.data.repository.UserRepository
+import com.mora.matritech.data.repository.InstitucionRepository
+import com.mora.matritech.data.remote.supabase
 import com.mora.matritech.screens.admin.AdminScreen
 import com.mora.matritech.screens.admin.users.UserFormScreen
 import com.mora.matritech.screens.admin.users.UserManagementScreen
@@ -24,6 +27,8 @@ import com.mora.matritech.screens.student.StudentScreen
 import com.mora.matritech.screens.superadmin.SuperAdminScreen
 import com.mora.matritech.screens.teaching.TeacherScreen
 import com.mora.matritech.screens.teaching.TeacherViewModel
+import com.mora.matritech.ui.screens.superadmin.AdminScreenCR
+import com.mora.matritech.ui.screens.superadmin.AdminViewModelCR
 import com.mora.matritech.ui.theme.MatriTechTheme
 import com.mora.matritech.ui.theme.NavRoutes
 import com.mora.matritech.ui.theme.login.LoginScreen
@@ -110,14 +115,13 @@ fun AppNavigation() {
         // ==================== CRUD DE USUARIOS (ADMIN) ====================
 
         // Lista de usuarios
-        // En MainActivity.kt, en la ruta de UserManagement:
         composable(NavRoutes.UserManagement.route) {
             val viewModel: UserViewModel = viewModel()
             val context = LocalContext.current
             val sessionManager = remember { SessionManager(context) }
 
             // Obtener el rol del usuario actual
-            val currentUserRole = sessionManager.getUserRole() // Ejemplo: "admin" o "superadmin"
+            val currentUserRole = sessionManager.getUserRole()
             val currentUserRoleId = when (currentUserRole) {
                 "superadmin" -> 0
                 "admin" -> 1
@@ -130,7 +134,7 @@ fun AppNavigation() {
 
             UserManagementScreen(
                 viewModel = viewModel,
-                currentUserRoleId = currentUserRoleId, // ← NUEVO
+                currentUserRoleId = currentUserRoleId,
                 onNavigateToForm = { userId ->
                     if (userId != null) {
                         navController.currentBackStackEntry
@@ -178,26 +182,44 @@ fun AppNavigation() {
             )
         }
 
+        // ==================== CRUD DE ADMINISTRADORES (SUPERADMIN) ====================
+
+        // Gestión de Administradores
+        composable(NavRoutes.AdminManagement.route) {
+            // Crear instancias de los repositorios
+            val userRepository = remember { UserRepository() }
+            val institucionRepository = remember { InstitucionRepository(supabase) }
+
+            // Crear el ViewModel manualmente
+            val viewModel = remember {
+                AdminViewModelCR(
+                    userRepository = userRepository,
+                    institucionRepository = institucionRepository
+                )
+            }
+
+            AdminScreenCR(
+                viewModel = viewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         // ==================== OTRAS SECCIONES DE ADMIN (FUTURAS) ====================
 
-        // Dashboard del admin (si lo necesitas después)
+        // Dashboard del admin
         composable(NavRoutes.AdminDashboard.route) {
-            // AdminDashboardScreen(navController)
-            // Por ahora, redirigir al admin principal
             AdminScreen(navController)
         }
 
-        // Reportes del admin (si lo necesitas después)
+        // Reportes del admin
         composable(NavRoutes.AdminReports.route) {
-            // AdminReportsScreen(navController)
-            // Por ahora, redirigir al admin principal
             AdminScreen(navController)
         }
 
-        // Configuración del admin (si lo necesitas después)
+        // Configuración del admin
         composable(NavRoutes.AdminSettings.route) {
-            // AdminSettingsScreen(navController)
-            // Por ahora, redirigir al admin principal
             AdminScreen(navController)
         }
     }
