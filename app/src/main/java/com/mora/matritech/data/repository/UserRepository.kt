@@ -12,25 +12,28 @@ import kotlinx.serialization.json.put
 
 /**
  * Repository para gestión de usuarios (CRUD)
- * Solo para uso del Admin
+ * Solo para uso del Admin y SuperAdmin
+ * ACTUALIZADO: Incluye funcionalidad para asignar instituciones
  */
 class UserRepository {
 
     /**
-     * OBTENER TODOS LOS USUARIOS
+     * OBTENER TODOS LOS USUARIOS con filtros opcionales
      */
     suspend fun getAllUsers(
         roleFilter: Int? = null,
-        activeOnly: Boolean? = null
+        activeOnly: Boolean? = null,
+        institucionFilter: String? = null
     ): Result<List<UserData>> {
         return try {
-            println("🔍 Obteniendo usuarios... roleFilter=$roleFilter, activeOnly=$activeOnly")
+            println("🔍 Obteniendo usuarios... roleFilter=$roleFilter, activeOnly=$activeOnly, institucionFilter=$institucionFilter")
 
             val users = supabase.from("usuarios")
                 .select {
                     filter {
                         roleFilter?.let { eq("rol_id", it) }
                         activeOnly?.let { eq("activo", it) }
+                        institucionFilter?.let { eq("institucion_id", it) }
                     }
                 }
                 .decodeList<UserData>()
@@ -81,7 +84,8 @@ class UserRepository {
         email: String,
         password: String,
         nombre: String,
-        roleId: Int
+        roleId: Int,
+        institucionId: String? = null
     ): Result<UserData> {
         return try {
             println("➕ Creando usuario via Edge Function: $email, rol: $roleId")
@@ -94,6 +98,7 @@ class UserRepository {
                     put("password", password)
                     put("nombre", nombre)
                     put("rol_id", roleId)
+                    institucionId?.let { put("institucion_id", it) }
                 }
             )
 
@@ -134,7 +139,7 @@ class UserRepository {
                 e.message?.contains("not found", ignoreCase = true) == true ||
                 e.message?.contains("Function") == true) {
                 println("⚠️ Edge Function no disponible, usando método alternativo")
-                return createUserFallback(email, password, nombre, roleId)
+                return createUserFallback(email, password, nombre, roleId, institucionId)
             }
 
             val message = when {
@@ -159,7 +164,8 @@ class UserRepository {
         email: String,
         password: String,
         nombre: String,
-        roleId: Int
+        roleId: Int,
+        institucionId: String? = null
     ): Result<UserData> {
         return try {
             println("⚠️ Usando método alternativo (cerrará sesión del admin)")
@@ -171,6 +177,7 @@ class UserRepository {
                 data = buildJsonObject {
                     put("nombre", nombre)
                     put("rol_id", roleId)
+                    institucionId?.let { put("institucion_id", it) }
                 }
             }
 
@@ -185,6 +192,7 @@ class UserRepository {
                     set("nombre", nombre)
                     set("rol_id", roleId)
                     set("activo", true)
+                    institucionId?.let { set("institucion_id", it) }
                 }) {
                     filter {
                         eq("id", authUser.id)
@@ -204,14 +212,15 @@ class UserRepository {
     }
 
     /**
-     * ACTUALIZAR USUARIO (nombre, email, rol)
+     * ACTUALIZAR USUARIO (nombre, email, rol, institución)
      * NOTA: No actualiza el email en Auth (requiere admin privileges)
      */
     suspend fun updateUser(
         userId: String,
         nombre: String,
         email: String,
-        roleId: Int
+        roleId: Int,
+        institucionId: String? = null
     ): Result<UserData> {
         return try {
             println("✏️ Actualizando usuario: $userId")
@@ -222,6 +231,9 @@ class UserRepository {
                     set("nombre", nombre)
                     set("email", email)
                     set("rol_id", roleId)
+                    if (institucionId != null) {
+                        set("institucion_id", institucionId)
+                    }
                 }) {
                     filter {
                         eq("id", userId)
@@ -243,6 +255,65 @@ class UserRepository {
                 else -> e.message ?: "Error al actualizar"
             }
             Result.failure(Exception(message))
+        }
+    }
+
+    /**
+     * ASIGNAR O CAMBIAR INSTITUCIÓN de un usuario
+     */
+    suspend fun assignInstitucion(
+        userId: String,
+        institucionId: String?
+    ): Result<UserData> {
+        return try {
+            println("🏫 Asignando institución $institucionId al usuario $userId")
+
+            supabase.from("usuarios")
+                .update({
+                    if (institucionId != null) {
+                        set("institucion_id", institucionId)
+                    } else {
+                        set("institucion_id", null as String?)
+                    }
+                }) {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+
+            val updatedUser = getUserById(userId)
+                ?: throw Exception("No se pudo obtener el usuario actualizado")
+
+            println("✅ Institución asignada correctamente")
+            Result.success(updatedUser)
+
+        } catch (e: Exception) {
+            println("❌ Error al asignar institución: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * OBTENER USUARIOS POR INSTITUCIÓN
+     */
+    suspend fun getUsersByInstitucion(institucionId: String): Result<List<UserData>> {
+        return try {
+            println("🔍 Obteniendo usuarios de institución: $institucionId")
+
+            val users = supabase.from("usuarios")
+                .select {
+                    filter {
+                        eq("institucion_id", institucionId)
+                    }
+                }
+                .decodeList<UserData>()
+
+            println("✅ ${users.size} usuarios encontrados")
+            Result.success(users)
+
+        } catch (e: Exception) {
+            println("❌ Error al obtener usuarios por institución: ${e.message}")
+            Result.failure(e)
         }
     }
 
@@ -297,6 +368,30 @@ class UserRepository {
     }
 
     /**
+     * ELIMINAR USUARIO PERMANENTEMENTE (hard delete)
+     * ⚠️ USAR CON PRECAUCIÓN
+     */
+    suspend fun deleteUserPermanently(userId: String): Result<Boolean> {
+        return try {
+            println("🗑️ Eliminando usuario permanentemente: $userId")
+
+            supabase.from("usuarios")
+                .delete {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+
+            println("✅ Usuario eliminado permanentemente")
+            Result.success(true)
+
+        } catch (e: Exception) {
+            println("❌ Error al eliminar usuario: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
      * OBTENER USUARIO POR ID
      */
     suspend fun getUserById(userId: String): UserData? {
@@ -335,6 +430,31 @@ class UserRepository {
             Result.success(stats)
         } catch (e: Exception) {
             println("❌ Error al obtener estadísticas: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * OBTENER ESTADÍSTICAS POR INSTITUCIÓN
+     */
+    suspend fun getStatsByInstitucion(institucionId: String): Result<UserStats> {
+        return try {
+            val users = getUsersByInstitucion(institucionId).getOrThrow()
+
+            val stats = UserStats(
+                totalUsers = users.size,
+                activeUsers = users.count { it.activo },
+                inactiveUsers = users.count { !it.activo },
+                studentCount = users.count { it.roleId == 3 },
+                teacherCount = users.count { it.roleId == 4 },
+                adminCount = users.count { it.roleId == 1 },
+                coordinatorCount = users.count { it.roleId == 2 },
+                representativeCount = users.count { it.roleId == 5 }
+            )
+
+            Result.success(stats)
+        } catch (e: Exception) {
+            println("❌ Error al obtener estadísticas por institución: ${e.message}")
             Result.failure(e)
         }
     }
