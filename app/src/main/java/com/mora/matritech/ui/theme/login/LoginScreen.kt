@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,10 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -43,20 +37,19 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Observar cambios en el estado de login y navegar
-    LaunchedEffect(uiState.isSuccess, uiState.userRole) {
-        if (uiState.isSuccess && uiState.userRole != null) {
+    // 🔹 Navegación por rol (LOGIN EXITOSO)
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn && uiState.userRole != null) {
             val route = when (uiState.userRole) {
-                UserRole.ADMIN -> NavRoutes.Admin.route
                 UserRole.SUPER_ADMIN -> NavRoutes.SuperAdmin.route
-                UserRole.REPRESENTANTE -> NavRoutes.Representante.route
+                UserRole.ADMIN -> NavRoutes.Admin.route
+                UserRole.COORDINATOR -> NavRoutes.Coordinator.route
                 UserRole.STUDENT -> NavRoutes.Student.route
                 UserRole.TEACHER -> NavRoutes.Teacher.route
-                UserRole.COORDINATOR -> NavRoutes.Coordinator.route
-                else -> NavRoutes.Login.route
+                UserRole.REPRESENTANTE -> NavRoutes.Representante.route
+                null -> TODO()
             }
 
-            // Navegar y limpiar el back stack
             navController.navigate(route) {
                 popUpTo(NavRoutes.Login.route) { inclusive = true }
                 launchSingleTop = true
@@ -64,10 +57,10 @@ fun LoginScreen(
         }
     }
 
-    // Mostrar error si existe
+    // 🔹 Mostrar errores
     LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { error ->
-            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+        uiState.errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.clearError()
         }
     }
@@ -84,16 +77,15 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo
+
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_background),
-                contentDescription = "Logo MatriTech",
+                contentDescription = "Logo",
                 modifier = Modifier.size(120.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Título
             Text(
                 text = "MatriTech",
                 fontSize = 32.sp,
@@ -104,47 +96,29 @@ fun LoginScreen(
             Text(
                 text = "Inicia sesión en tu cuenta",
                 fontSize = 16.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(top = 8.dp)
+                color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Correo electrónico") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = "Email"
-                    )
-                },
+                leadingIcon = { Icon(Icons.Default.Email, null) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF00ACC1),
-                    unfocusedBorderColor = Color.LightGray
-                ),
                 singleLine = true,
                 enabled = !uiState.isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Contraseña
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Contraseña") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Password"
-                    )
-                },
+                leadingIcon = { Icon(Icons.Default.Lock, null) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -152,10 +126,7 @@ fun LoginScreen(
                                 Icons.Default.Visibility
                             else
                                 Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible)
-                                "Ocultar contraseña"
-                            else
-                                "Mostrar contraseña"
+                            contentDescription = null
                         )
                     }
                 },
@@ -165,30 +136,12 @@ fun LoginScreen(
                     PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF00ACC1),
-                    unfocusedBorderColor = Color.LightGray
-                ),
                 singleLine = true,
                 enabled = !uiState.isLoading
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Olvidaste tu contraseña
-            Text(
-                text = "¿Olvidaste tu contraseña?",
-                color = Color(0xFF00ACC1),
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable { /* TODO: Implementar recuperación */ }
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Botón Login
             Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank()) {
@@ -196,7 +149,7 @@ fun LoginScreen(
                     } else {
                         Toast.makeText(
                             context,
-                            "Por favor completa todos los campos",
+                            "Completa todos los campos",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -204,43 +157,26 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00ACC1)
-                ),
                 enabled = !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
                     )
                 } else {
-                    Text(
-                        text = "Iniciar Sesión",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Iniciar Sesión", fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Link a registro
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "¿No tienes cuenta? ",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+            Row(horizontalArrangement = Arrangement.Center) {
+                Text("¿No tienes cuenta? ")
                 Text(
                     text = "Regístrate",
-                    color = Color(0xFF00ACC1),
-                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
+                    color = Color(0xFF00ACC1),
                     modifier = Modifier.clickable {
                         navController.navigate(NavRoutes.Register.route)
                     }
