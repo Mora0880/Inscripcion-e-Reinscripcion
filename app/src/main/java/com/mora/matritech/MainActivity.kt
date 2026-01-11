@@ -36,6 +36,8 @@ import com.mora.matritech.ui.theme.login.LoginViewModel
 import com.mora.matritech.ui.theme.login.LoginViewModelFactory
 import com.mora.matritech.ui.theme.register.RegisterScreen
 import com.mora.matritech.ui.theme.splash.SplashScreen
+import com.mora.matritech.screens.admin.AdminEnrollmentsScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,6 +112,18 @@ fun AppNavigation() {
         composable(NavRoutes.Coordinator.route) {
             val vm: CoordinatorViewModel = viewModel()
             CoordinatorScreen(vm, navController)
+        }
+
+        composable("admin/enrollments") {
+            AdminEnrollmentsScreen(navController = navController)
+        }
+
+        composable(
+            route = "admin/enrollments/detail/{enrollmentId}",
+            arguments = listOf(navArgument("enrollmentId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val enrollmentId = backStackEntry.arguments?.getString("enrollmentId")
+            // EnrollmentDetailScreen(navController, enrollmentId)  // Por implementar si quieres
         }
 
         // ==================== CRUD DE USUARIOS (ADMIN) ====================

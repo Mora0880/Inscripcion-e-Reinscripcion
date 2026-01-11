@@ -55,6 +55,7 @@ fun AdminScreen(
                     // Navegar según el item
                     when (item) {
                         "usuarios" -> navController.navigate("admin/users")
+                        "inscripciones" -> navController.navigate("admin/enrollments")  // ← NUEVO
                         "dashboard" -> navController.navigate("admin/dashboard")
                         "reportes" -> navController.navigate("admin/reports")
                         "configuracion" -> navController.navigate("admin/settings")
@@ -101,6 +102,7 @@ fun AdminScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                     QuickActionsSection(
                         onAddUser = { navController.navigate("admin/users/form") },
+                        onViewEnrollments = { navController.navigate("admin/enrollments") },
                         onViewReports = { navController.navigate("admin/reports") },
                         onViewSettings = { navController.navigate("admin/settings") }
                     )
@@ -144,6 +146,12 @@ fun AdminDrawerContent(
             title = "Usuarios",
             icon = Icons.Default.People,
             onClick = { onItemClick("usuarios") }
+        )
+
+        DrawerItem(
+            title = "Inscripciones",
+            icon = Icons.Default.AppRegistration,
+            onClick = { onItemClick("inscripciones") }
         )
 
         DrawerItem(
@@ -365,6 +373,7 @@ private fun RowScope.StatCard(
 @Composable
 private fun QuickActionsSection(
     onAddUser: () -> Unit,
+    onViewEnrollments: () -> Unit,  // ← NUEVO parámetro
     onViewReports: () -> Unit,
     onViewSettings: () -> Unit
 ) {
@@ -381,11 +390,11 @@ private fun QuickActionsSection(
                 onClick = onAddUser
             )
             QuickActionCard(
-                title = "Exportar Datos",
-                icon = Icons.Default.Download,
-                backgroundColor = Color.White,
-                textColor = Color.Black,
-                onClick = { }
+                title = "Inscripciones",  // ← NUEVO
+                icon = Icons.Default.AppRegistration,
+                backgroundColor = Color(0xFFFF9800),
+                textColor = Color.White,
+                onClick = onViewEnrollments
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
