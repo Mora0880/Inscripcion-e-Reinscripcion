@@ -108,6 +108,19 @@ class EnrollmentRepository(private val context: Context) {
         }
     }
 
+    suspend fun getAllEnrollments(): List<Inscripcion> {
+        return try {
+            supabase.from("inscripciones")
+                .select {
+                    order("fecha_solicitud", Order.DESCENDING)
+                }
+                .decodeList<Inscripcion>()
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error al obtener todas las inscripciones", e)
+            emptyList()
+        }
+    }
+
     /**
      * Sube un documento a Supabase Storage
      */
@@ -219,27 +232,41 @@ class EnrollmentRepository(private val context: Context) {
     }
 
     /**
-     * Aprobar inscripción
+     * Aprobar inscripción - CORREGIDO ✅
      */
     suspend fun approveEnrollment(inscripcionId: String, adminId: String): EnrollmentResult {
         return try {
+            Log.d(TAG, "🟢 Aprobando inscripción ID: $inscripcionId")
+            Log.d(TAG, "👤 Admin ID: $adminId")
+
+            // Crear el mapa de actualización
+            val updateData = mapOf(
+                "estado" to "aprobada",
+                "revisado_por" to adminId,
+                "fecha_revision" to "now()"
+            )
+
+            // Realizar el update
             supabase.from("inscripciones")
-                .update({
-                    set("estado", "aprobada")
-                    set("revisado_por", adminId)
-                    set("fecha_revision", "now()")
-                }) {
-                    filter { eq("id", inscripcionId) }
+                .update(updateData) {
+                    filter {
+                        eq("id", inscripcionId)
+                    }
                 }
 
+            Log.d(TAG, "✅ Inscripción aprobada exitosamente")
             EnrollmentResult.Success(inscripcionId)
+
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Error al aprobar inscripción", e)
+            Log.e(TAG, "Detalle: ${e.message}")
+            Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
             EnrollmentResult.Error(e.message ?: "Error al aprobar")
         }
     }
 
     /**
-     * Rechazar inscripción
+     * Rechazar inscripción - CORREGIDO ✅
      */
     suspend fun rejectEnrollment(
         inscripcionId: String,
@@ -247,18 +274,33 @@ class EnrollmentRepository(private val context: Context) {
         motivo: String
     ): EnrollmentResult {
         return try {
+            Log.d(TAG, "🔴 Rechazando inscripción ID: $inscripcionId")
+            Log.d(TAG, "👤 Admin ID: $adminId")
+            Log.d(TAG, "📝 Motivo: $motivo")
+
+            // Crear el mapa de actualización
+            val updateData = mapOf(
+                "estado" to "rechazada",
+                "motivo_rechazo" to motivo,
+                "revisado_por" to adminId,
+                "fecha_revision" to "now()"
+            )
+
+            // Realizar el update
             supabase.from("inscripciones")
-                .update({
-                    set("estado", "rechazada")
-                    set("motivo_rechazo", motivo)
-                    set("revisado_por", adminId)
-                    set("fecha_revision", "now()")
-                }) {
-                    filter { eq("id", inscripcionId) }
+                .update(updateData) {
+                    filter {
+                        eq("id", inscripcionId)
+                    }
                 }
 
+            Log.d(TAG, "✅ Inscripción rechazada exitosamente")
             EnrollmentResult.Success(inscripcionId)
+
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Error al rechazar inscripción", e)
+            Log.e(TAG, "Detalle: ${e.message}")
+            Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
             EnrollmentResult.Error(e.message ?: "Error al rechazar")
         }
     }
